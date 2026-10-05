@@ -64,7 +64,14 @@ def _write_report(path: Path, result: dict[str, Any], processed: dict[str, Any] 
     rows.extend(["| Source inventory and missing dependency reporting | PASS | All required task pack files are inventoried; missing files fail the pipeline. |", "| Contract/schema and key validation | PASS | README columns and primary identifiers are validated; roster agent_id is intentionally non-unique. |", "| Source-aware timestamps and effective roster | PARTIAL | Implemented, but legacy created/first-response provenance is not documented precisely; only legacy resolved_at is treated as UTC. |", "| Anomaly, text-quality, reconciliation flags | PARTIAL | Signup/product flags work; text heuristic flags 21 while email context estimates ~40, and exact-timestamp duplicate matching may miss near-time re-imports. |", "| Relationship and row-count-safe joins | PARTIAL | Temporal roster assignment is used and no expanding join is applied; relationship findings are diagnostic, and ambiguous order links remain unresolved. |", "| Reproducible canonical outputs and forensic reporting | PASS | Parquet tables and generated report written when validation passes. |", "| Business KPI/ranking or Stage 2 modeling | PASS | Not implemented. |"])
     rows.extend(["", "## Canonical outputs", ""])
     if processed:
-        rows.extend(f"- `{name}`: {value['row_count']} rows at `{value['path']}`" for name, value in processed["outputs"].items())
+        project_root = Path(__file__).resolve().parents[3]
+        for name, value in processed["outputs"].items():
+            output_path = Path(value["path"]).resolve()
+            try:
+                display_path = output_path.relative_to(project_root).as_posix()
+            except ValueError:
+                display_path = output_path.name
+            rows.append(f"- `{name}`: {value['row_count']} rows at `{display_path}`")
     else:
         rows.append("No canonical datasets were written because one or more expected source files are missing.")
     rows.append("")

@@ -100,10 +100,10 @@ data/raw
 
 ## Deployment (single container)
 
-The container serves the dashboard only. It does not include raw source data or run Stages 1–7 at startup. Deployment uses **Option A: a separately supplied, precomputed reduced dashboard bundle**. Package the outputs after a successful pipeline and Stage 7 run:
+The container serves the dashboard only. It does not include raw source data or run Stages 1–7 at startup. Deployment uses **Option A: a separately supplied, precomputed reduced dashboard bundle**. The controlled release path gates packaging on Stages 1–6 and Stage 7, validates a hashed manifest, and installs an immutable release without activating the service:
 
 ```bash
-python -m uv run python scripts/package_dashboard_data.py --source-dir data/interim --output-dir data/deployment
+python -m uv run python scripts/refresh_release.py --release-id <new-unique-release-id>
 ```
 
 The packager keeps aggregate agent tables and summary reports, strips ticket-level messages and notes, and excludes machine-local report paths. Store the bundle in a protected deployment artifact location and mount it read-only. Raw source files are build inputs only and are excluded from Git/Docker contexts. The full `data/interim/` can contain ticket-level content; do not mount it into the serving container.
@@ -114,7 +114,7 @@ Build and run from the repository root (Bash):
 docker build -t vireo-support-intelligence:0.1.0 .
 docker run -d --name vireo-support-intelligence --restart unless-stopped \
   -p 8501:8501 \
-  --mount type=bind,source="$(pwd)/data/deployment",target=/app/runtime-data,readonly \
+  --mount type=bind,source="$(pwd)/data/releases/stage10-20261005-local1",target=/app/runtime-data,readonly \
   vireo-support-intelligence:0.1.0
 ```
 
@@ -123,7 +123,7 @@ PowerShell volume example:
 ```powershell
 docker run -d --name vireo-support-intelligence --restart unless-stopped `
   -p 8501:8501 `
-  --mount "type=bind,source=$((Resolve-Path data/deployment).Path),target=/app/runtime-data,readonly" `
+  --mount "type=bind,source=$((Resolve-Path data/releases/stage10-20261005-local1).Path),target=/app/runtime-data,readonly" `
   vireo-support-intelligence:0.1.0
 ```
 
@@ -133,7 +133,7 @@ Open `http://localhost:8501`. The container runs as an unprivileged user. CORS a
 docker inspect --format '{{.State.Health.Status}}' vireo-support-intelligence
 ```
 
-`python -m app.healthcheck` emits JSON status: `healthy`, `degraded`, or `unhealthy`. AI absence yields `degraded` while deterministic functions remain available; Docker treats degraded as a functioning process. Missing/corrupt required outputs or an unavailable Streamlit health endpoint produce `unhealthy`.
+`python -m app.healthcheck` emits JSON status: `healthy`, `degraded`, or `unhealthy`. AI absence yields `degraded` while deterministic functions remain available; Docker treats degraded as a functioning process. Missing/corrupt required outputs, invalid bundle hashes, or an unavailable Streamlit health endpoint produce `unhealthy`.
 
 ### Deployment configuration
 
@@ -147,11 +147,11 @@ Configure secrets through a deployment platform's secret store or process enviro
 
 ### Runtime data and recovery
 
-The image contains application code and locked runtime libraries only. `data/raw/` is needed to rebuild analysis outside the serving container. `data/interim/` is generated and may contain ticket-level content; the container receives only the reduced `data/deployment/` bundle. Keep versioned copies of the image tag and matching bundle. To roll back, stop/remove the current container, restore the previous known-good bundle, and run the previous image tag with the same mount and port. No database or state migration is required.
+The image contains application code and locked runtime libraries only. `data/raw/` is needed to rebuild analysis outside the serving container. `data/interim/` is generated and may contain ticket-level content; the container receives only the reduced immutable release bundle. Keep versioned copies of the image digest and matching bundle. To roll back, use the prior image and bundle pair with the deployment platform's rollback process. No database or state migration is required.
 
-For startup failures, inspect `docker logs vireo-support-intelligence` and health output. Missing outputs mean rebuild the bundle with `scripts/package_dashboard_data.py`; schema/corruption errors mean rerun the pipeline and Stage 7 before packaging. Degraded AI status is expected without an evaluated model and does not block the dashboard.
+For startup failures, inspect `docker logs vireo-support-intelligence` and health output. Missing outputs mean rebuild through `scripts/refresh_release.py` with a new release ID; schema/corruption errors mean rerun the pipeline and Stage 7 before packaging. Degraded AI status is expected without an evaluated model and does not block the dashboard.
 
-Container build and run still require validation on a host with Docker before the image can be called deployable. See [deployment documentation](docs/technical/deployment.md) and the [production checklist](docs/technical/production_checklist.md).
+See the [deployment documentation](docs/technical/deployment.md), [operations guide](docs/technical/operations.md), [release process](docs/technical/release_process.md), [incident runbook](docs/technical/incident_response.md), and [Stage 10 acceptance record](docs/technical/final_acceptance.md).
 
 Main folders:
 

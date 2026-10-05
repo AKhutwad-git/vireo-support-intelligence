@@ -8,13 +8,13 @@ The container uses locked runtime dependencies from `requirements.lock`, runs as
 
 ## Data lifecycle and safety
 
-Deployment uses precomputed data (Option A). The deterministic pipeline and Stage 7 evaluation run outside the serving container. After both pass, run:
+Deployment uses precomputed data (Option A). The deterministic pipeline and Stage 7 evaluation run outside the serving container. After both pass, use the controlled refresh flow to build and immutably install a candidate release:
 
 ```bash
-python -m uv run python scripts/package_dashboard_data.py --source-dir data/interim --output-dir data/deployment
+python -m uv run python scripts/refresh_release.py --release-id <new-unique-release-id>
 ```
 
-The packager validates the app's schema/agent joins and writes four aggregate Parquet tables (`training_priority`, `agent_comparison`, `agent_economics`, `agent_metrics`), summary-only Stage 2/4 JSON, an allowlisted Stage 5 status summary, and optional aggregate AI diagnostics/Stage 7 report. It writes `deployment_manifest.json`. It does not copy raw ticket-level metrics, normalized tickets, customer/order data, source documents, ticket messages, or agent notes. The Stage 5 source report's machine-local cache path is omitted.
+The refresh gate requires passing Stages 1–6 reports and Stage 7 evaluation before packaging. The packager validates app schema/agent joins and writes four aggregate Parquet tables (`training_priority`, `agent_comparison`, `agent_economics`, `agent_metrics`), summary-only Stage 2/4 JSON, an allowlisted Stage 5 status summary, and optional aggregate AI diagnostics/Stage 7 report. `deployment_manifest.json` records file sizes and SHA-256 hashes plus source snapshot/file hashes, pipeline revision/dirty state, config hash, reporting period, and creation time. Raw ticket-level metrics, normalized tickets, customer/order data, source documents, ticket messages, and agent notes are excluded. The flow validates and installs an immutable release but does not activate the serving app.
 
 Raw files in `data/raw/` are source/build-time inputs, not runtime files. Full `data/interim/` is generated and can contain customer-level message and agent-note fields; never mount it into the serving container. Mount only the reduced bundle at `/app/runtime-data` as read-only. The app requires four Parquet files plus Stage 2 and Stage 4 dashboard summaries. Stage 7 and AI files are optional; AI diagnostics are unavailable in the current run.
 
@@ -48,7 +48,7 @@ docker build -t vireo-support-intelligence:0.1.0 .
 
 The process uses `/app` as its working directory; data/resource paths are resolved from the module path and `VIREO_INTERIM_DIR`, not the invoking shell's working directory. Startup reads/validates required Parquet schemas, checks that the comparison table has full-period rows, checks agent ID alignment, and loads the Stage 2/4 summaries. It does not run the pipeline or call a model.
 
-The health command validates the same dashboard data contract and checks Streamlit's `/_stcore/health` endpoint. It does not call AI or rerun analysis:
+The health command validates the dashboard data contract and bundle hashes and checks Streamlit's `/_stcore/health` endpoint. It does not call AI or rerun analysis:
 
 ```bash
 python -m app.healthcheck
@@ -65,7 +65,7 @@ Structured single-line Python logs default to INFO. They record app version, opt
 ```bash
 docker run -d --name vireo-support-intelligence --restart unless-stopped \
   -p 8501:8501 \
-  --mount type=bind,source="$(pwd)/data/deployment",target=/app/runtime-data,readonly \
+  --mount type=bind,source="$(pwd)/data/releases/<release-id>",target=/app/runtime-data,readonly \
   vireo-support-intelligence:0.1.0
 ```
 
@@ -82,10 +82,10 @@ docker logs vireo-support-intelligence
 
 ## Rollback and recovery
 
-Retain a known-good image tag and its matching reduced bundle in the deployment artifact store. To roll back: stop/remove the current container, restore the previous bundle, then run the prior image tag with the same read-only mount and port. The app is stateless; no database migration or user state restoration is needed. For missing or corrupt outputs, rebuild from a fresh successful deterministic pipeline and Stage 7 report, package again, and promote the bundle/image pair together.
+Retain a known-good immutable image digest/tag and its matching immutable reduced bundle in the deployment artifact store. To roll back: route traffic to the prior instance or redeploy the prior exact image/bundle pair. The app is stateless; no database migration or user state restoration is needed. For missing or corrupt outputs, quarantine that release, rebuild from a fresh successful deterministic pipeline and Stage 7 report through `scripts/refresh_release.py` using a new release ID, and promote the bundle/image pair together. See [operations](operations.md), [release process](release_process.md), and [incident response](incident_response.md).
 
 ## Security and analytical limitations
 
 No authentication is built into the app. Use a trusted network boundary and TLS termination appropriate to the actual host. This is not a security certification. Stage 5 real-model quality/cost is unavailable; Stage 7 remains validated with material limitations. Stage 3 uncertainty is approximate and independent-ticket based; no real-world decision ground truth, genuine out-of-time validation, or full clustered case-mix uncertainty exists. 567 tickets lack effective roster context; valid handle-time outliers remain; SLA is associated with resolver identity because first-response actor identity is absent. The dashboard does not establish agent causality or guaranteed savings.
 
-Monitoring, scheduled refresh, alerting, incident response, access-management integration, and production acceptance are Stage 10 work.
+Monitoring backends, scheduled refresh, alert delivery, access-management integration, target-host security review, and production acceptance require deployment-owner configuration. The repository now defines operational procedures and gated refresh tooling; those documents do not imply that external services or host acceptance have been completed. See [the Stage 10 checklist](production_checklist.md) and [acceptance record](final_acceptance.md).

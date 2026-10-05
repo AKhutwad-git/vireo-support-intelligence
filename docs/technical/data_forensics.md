@@ -105,8 +105,8 @@ The policy PDF is inventoried but not text-extracted in this run; its economics 
 
 ## Canonical outputs
 
-- `tickets`: 11750 rows at `C:\Users\admin\Desktop\NewProjects\vireo-support-intelligence\data\interim\normalized_tickets.parquet`
-- `agents`: 44 rows at `C:\Users\admin\Desktop\NewProjects\vireo-support-intelligence\data\interim\normalized_agents.parquet`
-- `customers`: 9500 rows at `C:\Users\admin\Desktop\NewProjects\vireo-support-intelligence\data\interim\normalized_customers.parquet`
-- `orders`: 15500 rows at `C:\Users\admin\Desktop\NewProjects\vireo-support-intelligence\data\interim\normalized_orders.parquet`
-- `products`: 14 rows at `C:\Users\admin\Desktop\NewProjects\vireo-support-intelligence\data\interim\normalized_products.parquet`
+- `tickets`: 11750 rows at `data/interim/normalized_tickets.parquet`
+- `agents`: 44 rows at `data/interim/normalized_agents.parquet`
+- `customers`: 9500 rows at `data/interim/normalized_customers.parquet`
+- `orders`: 15500 rows at `data/interim/normalized_orders.parquet`
+- `products`: 14 rows at `data/interim/normalized_products.parquet`

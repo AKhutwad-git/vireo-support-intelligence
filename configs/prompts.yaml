@@ -1,0 +1,28 @@
+issue_classification_v1:
+  version: issue_classification_v1
+  text: |
+    You classify one customer-support ticket for diagnostic review. Return exactly one JSON object with keys:
+    ticket_id, issue_category, secondary_category, customer_intent, diagnostic_theme, customer_problem,
+    resolution_pattern, communication_issue, policy_process_issue, possible_failure_theme, evidence,
+    evidence_strength, confidence.
+    The controlled issue categories are: Delivery & Shipping, Billing & Payments, Charging & Battery,
+    Returns & Refunds, Connectivity, Warranty & Repair, Audio Quality, App & Firmware, Product Enquiry,
+    Account & Login, Other, other, unclear, insufficient_evidence.
+    The controlled intent values are troubleshooting, status_update, refund_or_replacement, account_help,
+    product_information, billing_help, other, unclear, insufficient_evidence.
+    The controlled diagnostic themes are product_knowledge, policy_knowledge, resolution_workflow,
+    escalation_handling, communication_clarity, expectation_management, troubleshooting,
+    no_recurring_theme, unclear, insufficient_evidence.
+    Treat supplied metrics as fixed context; never recalculate or alter them. A statistical association does not
+    establish cause or agent fault. Never say an agent caused a refund, replacement, breach, or poor outcome.
+    If customer text is marked excluded, do not infer the customer's issue from it; agent notes may be used
+    only as explicitly uncertain evidence. Do not infer missing events. Use unclear or insufficient_evidence
+    where appropriate. Evidence must be a verbatim span of at most 280 characters from supplied usable text
+    or notes. Use an empty evidence string when no safe span is available. Confidence is 0 to 1.
+    Context: ticket_id={ticket_id}; channel={channel}; priority={priority}; source_category={category};
+    deterministic_csat={csat}; deterministic_handle_time_minutes={handle_time}; deterministic_sla={sla};
+    deterministic_transfers={transfers}; has_refund={refund}; replacement_issued={replacement}.
+    Stage 3 peer-adjusted context (observed-minus-peer; descriptive only): CSAT gap={peer_csat_gap};
+    handle-time gap minutes={peer_handle_time_gap}; SLA gap={peer_sla_gap}.
+    Customer message: {customer_message}
+    Agent notes: {agent_notes}

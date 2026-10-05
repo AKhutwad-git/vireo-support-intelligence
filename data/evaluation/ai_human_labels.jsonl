@@ -1,0 +1,20 @@
+{"ticket_id":"TK-240014","issue_category":"Account & Login","reviewer_note":"Message asks for help after being locked out; notes report login failure and account-number update."}
+{"ticket_id":"TK-240023","issue_category":"App & Firmware","reviewer_note":"Customer explicitly reports a firmware update stuck at 89 percent."}
+{"ticket_id":"TK-240005","issue_category":"Audio Quality","reviewer_note":"Agent notes describe one-sided audio loss; customer message is vague, so notes support the issue label."}
+{"ticket_id":"TK-240021","issue_category":"Billing & Payments","reviewer_note":"Invoice link returns an error and notes say the invoice was regenerated."}
+{"ticket_id":"TK-240016","issue_category":"Charging & Battery","reviewer_note":"Customer reports an earbud does not charge overnight; notes describe contact cleaning."}
+{"ticket_id":"TK-240035","issue_category":"Connectivity","reviewer_note":"Customer describes phone connection dropping with distance."}
+{"ticket_id":"TK-240002","issue_category":"Delivery & Shipping","reviewer_note":"Order not delivered and tracking stalled; notes record courier check and refund."}
+{"ticket_id":"TK-240017","issue_category":"Product Enquiry","reviewer_note":"Customer asks a presales product-use question; notes record a specification response."}
+{"ticket_id":"TK-240010","issue_category":"Returns & Refunds","reviewer_note":"Customer asks about a refund not received; notes describe payment-status checking."}
+{"ticket_id":"TK-240078","issue_category":"Warranty & Repair","reviewer_note":"Notes describe an RMA status query and completed repair shipment."}
+{"ticket_id":"TK-240296","issue_category":"Connectivity","reviewer_note":"Customer text is degraded and excluded; agent notes describe device discovery and successful re-pairing."}
+{"ticket_id":"TK-240351","issue_category":"Billing & Payments","reviewer_note":"Customer text is degraded and excluded; notes say payment was debited without an order and refund was issued."}
+{"ticket_id":"TK-240533","issue_category":"Product Enquiry","reviewer_note":"Customer text is degraded and excluded; agent notes identify and answer a compatibility query."}
+{"ticket_id":"TK-241748","issue_category":"Billing & Payments","reviewer_note":"Customer text is flagged as IVR-like and excluded; notes describe payment without order and approved refund."}
+{"ticket_id":"TK-242044","issue_category":"App & Firmware","reviewer_note":"Customer text is flagged as IVR-like and excluded; notes report a failed firmware update and successful recovery."}
+{"ticket_id":"TK-247500","issue_category":"Returns & Refunds","reviewer_note":"Customer text is degraded and excluded; notes describe a pending return pickup and processed refund."}
+{"ticket_id":"TK-247807","issue_category":"Warranty & Repair","reviewer_note":"Customer text is degraded and excluded; notes report repair completion and return shipment."}
+{"ticket_id":"TK-248159","issue_category":"App & Firmware","reviewer_note":"Customer text is flagged as IVR-like and excluded; notes describe an update hang and successful recovery."}
+{"ticket_id":"TK-248236","issue_category":"Connectivity","reviewer_note":"Customer text is degraded and excluded; notes describe pairing failure and a firmware troubleshooting step."}
+{"ticket_id":"TK-250921","issue_category":"Charging & Battery","reviewer_note":"Customer text is degraded and excluded; notes identify a dead charging case and port-cleaning advice."}

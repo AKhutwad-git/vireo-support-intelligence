@@ -1,0 +1,7 @@
+{"case_id":"mock_invalid_category","case_type":"synthetic_validation_case","failure_mode":"invalid issue category","expected_behavior":"reject output; do not persist as analyzed"}
+{"case_id":"mock_missing_field","case_type":"synthetic_validation_case","failure_mode":"required field omitted","expected_behavior":"reject output; record invalid schema count"}
+{"case_id":"mock_wrong_ticket_id","case_type":"synthetic_validation_case","failure_mode":"hallucinated or mismatched ticket ID","expected_behavior":"reject output outside the request"}
+{"case_id":"mock_unsupported_evidence","case_type":"synthetic_validation_case","failure_mode":"evidence does not occur in supplied usable text","expected_behavior":"reject evidence span"}
+{"case_id":"mock_causal_claim","case_type":"synthetic_validation_case","failure_mode":"direct agent-causality language","expected_behavior":"reject unsupported attribution"}
+{"case_id":"mock_degraded_customer_text","case_type":"synthetic_validation_case","failure_mode":"customer text quality marked degraded","expected_behavior":"exclude message and use notes only or abstain"}
+{"case_id":"mock_overstated_confidence","case_type":"synthetic_validation_case","failure_mode":"high confidence with low evidence strength","expected_behavior":"retain as a review flag in evaluation"}

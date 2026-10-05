@@ -1,0 +1,22 @@
+# Local credentials and developer environments
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.streamlit/secrets.toml
+
+# Source-pack data and generated intermediate outputs are supplied separately.
+/data/raw/*
+!/data/raw/README.txt
+/data/interim/*
+!/data/interim/.gitkeep
+/data/deployment/
+
+# Local build artifacts
+build/
+dist/
+*.egg-info/

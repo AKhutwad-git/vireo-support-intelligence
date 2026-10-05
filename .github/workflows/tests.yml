@@ -1,0 +1,30 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  python-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install uv
+        run: python -m pip install uv==0.12.23
+      - name: Install locked dependencies
+        run: python -m uv sync --locked --all-extras
+      - name: Verify imports
+        run: python -m uv run python -c "import vireo, pyarrow, pandas, streamlit, yaml; print(vireo.__version__)"
+      - name: Validate deterministic decision path without AI
+        run: python -m uv run python scripts/validate_install.py
+      - name: Run unit and deployment contract tests
+        run: >-
+          python -m uv run pytest -q tests/unit
+          tests/integration/test_deployment_contract.py
+          tests/integration/test_no_ai_startup.py
+          tests/integration/test_streamlit_data_flow.py
+      - name: Build deployment image
+        run: docker build -t vireo-support-intelligence:ci .

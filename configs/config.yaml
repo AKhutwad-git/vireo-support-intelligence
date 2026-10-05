@@ -1,0 +1,80 @@
+paths:
+  raw: data/raw
+  interim: data/interim
+  forensics_report: docs/technical/data_forensics.md
+  stage2_findings: docs/technical/stage2_findings.md
+  stage3_findings: docs/technical/stage3_findings.md
+
+reporting_timezone: Asia/Kolkata
+
+# Source: support-policy.pdf, First-response service targets.
+sla_targets_minutes:
+  chat: 15
+  voice: 120
+  social: 240
+  email: 480
+
+stage3:
+  min_peer_agents: 3
+  min_peer_cell_observations: 5
+
+# Stage 5 is opt-in. No ticket text leaves the local environment unless enabled.
+ai:
+  enabled: false
+  provider: openai_compatible
+  endpoint: https://api.openai.com/v1/chat/completions
+  model: unset
+  api_key_env: VIREO_AI_API_KEY
+  selection_mode: top_n
+  max_population: 250
+  top_n: 250
+  sample_size: 100
+  random_seed: 1701
+  batch_size: 10
+  signals: [low_csat, high_handle_time, sla_breach, repeat_contact, refund_or_replacement, multiple_transfers]
+  output_token_estimate_per_ticket: 180
+  monthly_volume_tickets_per_week: 650
+  weeks_per_month: 4.333
+  pricing:
+    currency: USD
+    source: null
+    input_per_million_usd: null
+    output_per_million_usd: null
+  cache_path: data/interim/ai_cache.jsonl
+
+# Stage 6 uses only directionally adverse Stage 3 intervals for a training concern.
+# Economic exposure and AI diagnostics are explanatory context and do not affect score.
+stage6:
+  training_budget_inr: 400000
+  minimum_agent_tickets: 30
+  minimum_metric_observations: 30
+  minimum_adjustment_coverage: 0.70
+  minimum_roster_coverage: 0.70
+  minimum_peer_agents: 3
+  high_evidence_observations: 60
+  high_evidence_peer_agents: 5
+  require_interval_excludes_zero: true
+  metric_weights:
+    csat: 0.40
+    handle_time: 0.35
+    sla: 0.25
+  csat_gap_scale: 0.5
+  handle_time_relative_gap_scale: 0.25
+  sla_gap_scale: 0.05
+  medium_priority_score: 25
+  high_priority_score: 55
+  stability_factors:
+    persistent: 1.0
+    mixed: 0.8
+    single_period: 0.65
+    no_clear_adverse_period_signal: 0.55
+    insufficient_history: 0.4
+
+# Stage 7 resampling is deterministic and reports diagnostic sensitivity only.
+stage7:
+  bootstrap_replicates: 80
+  random_seed: 1701
+
+# Schema contracts are enforced from data/raw/README.txt by the Stage 1 ingestion module.
+datasets: {}
+relationships: []

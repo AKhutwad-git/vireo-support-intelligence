@@ -47,7 +47,7 @@ python -m uv sync --locked --all-extras
 
 ## Data placement
 
-Place the source pack files in `data/raw/`. Do not edit source files in place. Required schemas and policy context are documented in `data/raw/README.txt`; the policy PDF and client email are included in the source pack. The analytical pipeline writes generated Parquet/JSON files into `data/interim/` and technical findings into `docs/technical/`.
+Place the separately supplied source pack in local `data/raw/`; do not edit source files in place. Raw client records are not committed to this Git repository; only the source-pack README is tracked. Required schemas and policy context are documented in `data/raw/README.txt`. The analytical pipeline writes generated Parquet/JSON files into ignored `data/interim/` and technical findings into `docs/technical/`.
 
 ## Run the deterministic pipeline
 
@@ -100,31 +100,33 @@ data/raw
 
 ## Deployment (single container)
 
-The container serves the dashboard only. It does not include raw source data or run Stages 1–7 at startup. Deployment uses **Option A: a separately supplied, precomputed reduced dashboard bundle**. The controlled release path gates packaging on Stages 1–6 and Stage 7, validates a hashed manifest, and installs an immutable release without activating the service:
+The container serves the dashboard only. It does not include raw source data or run Stages 1–7 at startup. Deployment uses **Option A: a separately supplied, precomputed reduced dashboard bundle**. The controlled release path gates packaging on Stages 1–6 and Stage 7, validates a hashed manifest, and installs an immutable release without activating the service. The Git repository contains source and release tooling; generated bundles live under ignored local `data/releases/` and are not included in a source checkout.
+
+Run the example below in Bash; choose a unique ID for each release. The refresh command prints the installed path and does not activate a service:
 
 ```bash
-python -m uv run python scripts/refresh_release.py --release-id <new-unique-release-id>
+release_id="final-$(date -u +%Y%m%dT%H%M%SZ)"
+python -m uv run python scripts/refresh_release.py --release-id "$release_id"
+python -m uv run python -c "from app.bundle_validation import validate_dashboard_bundle; print(validate_dashboard_bundle('data/releases/$release_id')['status'])"
+image_tag="vireo-support-intelligence:0.1.0-$release_id"
+docker build -t "$image_tag" .
+docker run -d --name vireo-candidate -p 8502:8501 \
+  --mount "type=bind,source=$(pwd)/data/releases/$release_id,target=/app/runtime-data,readonly" \
+  "$image_tag"
 ```
 
-The packager keeps aggregate agent tables and summary reports, strips ticket-level messages and notes, and excludes machine-local report paths. Store the bundle in a protected deployment artifact location and mount it read-only. Raw source files are build inputs only and are excluded from Git/Docker contexts. The full `data/interim/` can contain ticket-level content; do not mount it into the serving container.
-
-Build and run from the repository root (Bash):
-
-```bash
-docker build -t vireo-support-intelligence:0.1.0 .
-docker run -d --name vireo-support-intelligence --restart unless-stopped \
-  -p 8501:8501 \
-  --mount type=bind,source="$(pwd)/data/releases/stage10-20261005-local1",target=/app/runtime-data,readonly \
-  vireo-support-intelligence:0.1.0
-```
-
-PowerShell volume example:
+PowerShell equivalent:
 
 ```powershell
-docker run -d --name vireo-support-intelligence --restart unless-stopped `
-  -p 8501:8501 `
-  --mount "type=bind,source=$((Resolve-Path data/releases/stage10-20261005-local1).Path),target=/app/runtime-data,readonly" `
-  vireo-support-intelligence:0.1.0
+$releaseId = "final-$((Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssZ'))"
+python -m uv run python scripts/refresh_release.py --release-id $releaseId
+python -m uv run python -c "from app.bundle_validation import validate_dashboard_bundle; print(validate_dashboard_bundle('data/releases/$releaseId')['status'])"
+$imageTag = "vireo-support-intelligence:0.1.0-$releaseId"
+docker build -t $imageTag .
+$bundle = (Resolve-Path "data/releases/$releaseId").Path
+docker run -d --name vireo-candidate -p 8502:8501 `
+  --mount "type=bind,source=$bundle,target=/app/runtime-data,readonly" `
+  $imageTag
 ```
 
 Open `http://localhost:8501`. The container runs as an unprivileged user. CORS and XSRF protections stay enabled. Check health with:
@@ -149,7 +151,7 @@ Configure secrets through a deployment platform's secret store or process enviro
 
 The image contains application code and locked runtime libraries only. `data/raw/` is needed to rebuild analysis outside the serving container. `data/interim/` is generated and may contain ticket-level content; the container receives only the reduced immutable release bundle. Keep versioned copies of the image digest and matching bundle. To roll back, use the prior image and bundle pair with the deployment platform's rollback process. No database or state migration is required.
 
-For startup failures, inspect `docker logs vireo-support-intelligence` and health output. Missing outputs mean rebuild through `scripts/refresh_release.py` with a new release ID; schema/corruption errors mean rerun the pipeline and Stage 7 before packaging. Degraded AI status is expected without an evaluated model and does not block the dashboard.
+For startup failures, inspect `docker logs vireo-candidate` and health output. Missing outputs mean rebuild through `scripts/refresh_release.py` with a new release ID; schema/corruption errors mean rerun the pipeline and Stage 7 before packaging. Degraded AI status is expected without an evaluated model and does not block the dashboard. These steps provide local Docker deployment tooling; external hosting and centralized monitoring/paging are not configured or verified here.
 
 See the [deployment documentation](docs/technical/deployment.md), [operations guide](docs/technical/operations.md), [release process](docs/technical/release_process.md), [incident runbook](docs/technical/incident_response.md), and [Stage 10 acceptance record](docs/technical/final_acceptance.md).
 

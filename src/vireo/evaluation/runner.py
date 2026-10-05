@@ -172,7 +172,7 @@ def run_stage7(root: Path | None = None, config_path: Path | None = None, bootst
             "Stage 3 intervals are approximate and assume independent tickets; Stage 7 cluster bootstrap is a separate raw Tier/team diagnostic, not a replacement case-mix-adjusted interval.",
             "Temporal and peer-definition tests are directional sensitivity analyses, not causal or out-of-time model validation.",
             "The decision engine has no real-world ground truth for false-positive/negative rates.",
-            "README.md and .env.example remain empty; submission-form.md is absent."]}
+            "The original client submission form is unavailable; external production hosting and centralized monitoring/paging are not configured."]}
     _write_json(interim/"stage7_validation_report.json",report)
     _write_stage7_docs(root/"docs"/"technical",report,first)
     return report
@@ -229,5 +229,8 @@ No real provider or predictions exist in the current run. AI quality and cost re
     for name,data in report["peer_robustness"]["definitions"].items():
         lines.append(f"- {name}: {data['agents_with_two_or_more_peers']}/{data['agents_evaluated']} agents supported; {data['point_signal_candidate_count']} two-signal point proxies.")
     lines.extend(["","## AI and unresolved risks",f"- Real-model quality: {report['ai_validation']['real_model_quality']}; real-model cost: {report['ai_validation']['real_model_cost']}.",
-        *[f"- {item}" for item in report["production_blockers"]],"","No dashboard, final memo, submission package, or deployment work was added.",""])
+        *[f"- {item}" for item in report["production_blockers"]],"","## Repository and deployment context",
+        "- The repository includes a README, evaluation memo, recording notes, and a submission-form status note; the original client form was not found.",
+        "- A Streamlit dashboard, Docker/deployment tools, release/refresh/promotion tools, operations documentation, and acceptance documentation are present.",
+        "- Local Docker/release tooling is available. External hosting and centralized monitoring/paging are not configured or verified.",""])
     (docs/"stage7_findings.md").write_text("\n".join(lines),encoding="utf-8",newline="\n")

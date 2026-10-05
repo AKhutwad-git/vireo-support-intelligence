@@ -1,24 +1,23 @@
 # Product Recording Notes (3 minutes maximum)
 
-Show the running dashboard itself; no slides are needed. Keep the recording concise and state that Stage 5 is unavailable in the current run.
+Record the running dashboard from the locally verified image and bundle pair listed in `release-record.md`. No slides are required. Keep the story in this order and do not imply a live AI run.
 
-## Suggested run of show
+## Storyboard
 
-1. **0:00–0:25 — What was built.** Introduce Vireo as a deterministic support analytics and training decision-support dashboard prepared for the Banao evaluation.
-2. **0:25–0:55 — What changed.** Explain the progression from the initial request (“CSAT per agent, handle time per agent, bottom ten flagged”) through source validation, peer/case-mix analysis, economics, decision rules, and Stage 7 evaluation. The bottom-ten framing was not retained as an automatic result.
-3. **0:55–1:30 — Overview.** Show the January 2025–June 2026 reporting window, latest quarter 2026 Q2, key performance measures, and the honest outcome of zero training candidates and 44 monitor agents.
-4. **1:30–2:05 — Agent views.** Demonstrate filters and the raw versus peer-adjusted versus training-priority views. Open one agent detail page and show evidence, uncertainty, stability, structured explanation, and observed exposure.
-5. **2:05–2:30 — Trust and AI.** Show the unavailable AI state and methodology caveats: approximate intervals, no causal attribution, missing roster context, and resolver-associated SLA.
-6. **2:30–2:50 — Exports and validation.** Show the CSV download controls and mention Stage 7 reconciliation/synthetic checks. Do not claim the synthetic tests are model accuracy or agent ground truth.
+1. **0:00–0:15 — Request.** “The request was CSAT per agent, handle time per agent, and a bottom-ten list flagged for action.” Explain that the list was a request to investigate, not a result to manufacture.
+2. **0:15–0:35 — Data and policy.** Show the reporting period and explain that ticket grain, completion-only CSAT, effective-dated roster assignments, support policy, and missing roster context were checked before comparisons.
+3. **0:35–1:00 — Deterministic analysis.** Summarize the operational measures and show that the calculations are deterministic. Explain that AI does not set the numeric metrics or decision.
+4. **1:00–1:20 — Peer comparison.** Show Tier-safe peer/case-mix comparisons. Raw point estimates are descriptive; uncertainty and evidence requirements control whether an agent can be recommended.
+5. **1:20–1:40 — Evidence gate.** Show the gate and the actual result: **0 defensible training candidates; 44 agents monitored**. The default gate did not support a bottom-ten recommendation.
+6. **1:40–2:00 — Dashboard.** Demonstrate the Overview and Agents pages, including filters and the raw, peer-adjusted, and training-priority views. Open one agent detail to show evidence and uncertainty.
+7. **2:00–2:20 — Economics.** Show observed contact, replacement, and refund exposure as separate population context. State that these are not agent-caused costs or guaranteed savings.
+8. **2:20–2:40 — Validation.** Show the Stage 7 summary: 12 independent reconciliations, eight synthetic scenarios, 220 explanation checks, and reproducibility passed. Clarify that synthetic checks are not model accuracy or ground-truth personnel evaluation.
+9. **2:40–3:00 — Decision and boundary.** Conclude: “The system does not manufacture a bottom-ten ranking when the evidence does not support one.” State that Stage 5 AI was unavailable in this evaluation run, so no live AI predictions or model-quality claims are shown. Stage 7 remains **VALIDATED WITH MATERIAL LIMITATIONS**.
 
-## Prompt/version evolution
+## Presentation notes
 
-The work evolved through explicit implementation stages: trusted data foundation (Stage 1), deterministic metrics (Stage 2), peer/case-mix analysis (Stage 3), economics (Stage 4), optional AI diagnostics (Stage 5, partial), evidence-gated decisions (Stage 6), and evaluation/robustness (Stage 7). This Stage 8 adds a presentation layer and submission documentation without moving analytical calculations into the UI.
-
-## What was discarded or not claimed
-
-- A manufactured bottom-ten list was rejected because no agent passed the default uncertainty gate.
-- Point-estimate-only names remain exploratory, not recommended.
-- AI-generated accuracy, confidence, cost, and diagnostic evidence are not shown because real predictions/evaluation are unavailable.
-- Observed financial exposure is not described as agent-caused cost or guaranteed savings.
-- No slides, deployment infrastructure, monitoring, or hosting are included.
+- Keep the initial request, validated data, deterministic analysis, evidence gate, dashboard, economics, validation, and final decision in that order.
+- Stage 5 is optional; it made zero real provider requests in the current evaluation run. Do not present cached, mock, or synthetic evidence as live model output.
+- Preserve these caveats: approximate uncertainty, no ground-truth agent-quality error measurement, no genuine out-of-time validation, incomplete clustered case-mix uncertainty, 567 tickets without effective roster context, retained handle-time outliers, and resolver-associated SLA attribution.
+- Point-estimate-only sensitivity names remain exploratory and must not be described as recommended training candidates.
+- Local Docker and release tooling exist. External hosting is not configured or verified; centralized monitoring and paging are not configured. No slides are needed.

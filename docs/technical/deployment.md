@@ -8,10 +8,14 @@ The container uses locked runtime dependencies from `requirements.lock`, runs as
 
 ## Data lifecycle and safety
 
-Deployment uses precomputed data (Option A). The deterministic pipeline and Stage 7 evaluation run outside the serving container. After both pass, use the controlled refresh flow to build and immutably install a candidate release:
+Deployment uses precomputed data (Option A). The deterministic pipeline and Stage 7 evaluation run outside the serving container. Use the controlled refresh flow to build and immutably install a candidate release. Generated bundles are local ignored artifacts, not part of a Git checkout. Pair only a bundle whose manifest records the intended clean source commit with an image built from that same commit and app version.
 
 ```bash
-python -m uv run python scripts/refresh_release.py --release-id <new-unique-release-id>
+release_id="final-$(date -u +%Y%m%dT%H%M%SZ)"
+python -m uv run python scripts/refresh_release.py --release-id "$release_id"
+python -m uv run python -c "from app.bundle_validation import validate_dashboard_bundle; print(validate_dashboard_bundle('data/releases/$release_id')['status'])"
+image_tag="vireo-support-intelligence:0.1.0-$release_id"
+docker build -t "$image_tag" .
 ```
 
 The refresh gate requires passing Stages 1–6 reports and Stage 7 evaluation before packaging. The packager validates app schema/agent joins and writes four aggregate Parquet tables (`training_priority`, `agent_comparison`, `agent_economics`, `agent_metrics`), summary-only Stage 2/4 JSON, an allowlisted Stage 5 status summary, and optional aggregate AI diagnostics/Stage 7 report. `deployment_manifest.json` records file sizes and SHA-256 hashes plus source snapshot/file hashes, pipeline revision/dirty state, config hash, reporting period, and creation time. Raw ticket-level metrics, normalized tickets, customer/order data, source documents, ticket messages, and agent notes are excluded. The flow validates and installs an immutable release but does not activate the serving app.
@@ -28,10 +32,10 @@ The bundle is an operationally sensitive internal-agent output. Store it in an a
 - `requirements-dev.lock`: pip-compatible lock export including development dependencies.
 - `Dockerfile`: single image; does not copy `data/`, secrets, tests, or docs.
 
-Build with:
+Build from the same clean commit recorded in the validated bundle manifest, with a unique release-specific image tag:
 
 ```bash
-docker build -t vireo-support-intelligence:0.1.0 .
+docker build -t "$image_tag" .
 ```
 
 ## Configuration and secrets
@@ -63,17 +67,25 @@ Structured single-line Python logs default to INFO. They record app version, opt
 ## Run
 
 ```bash
-docker run -d --name vireo-support-intelligence --restart unless-stopped \
-  -p 8501:8501 \
-  --mount type=bind,source="$(pwd)/data/releases/<release-id>",target=/app/runtime-data,readonly \
-  vireo-support-intelligence:0.1.0
+docker run -d --name vireo-candidate \
+  -p 127.0.0.1:8502:8501 \
+  --mount "type=bind,source=$(pwd)/data/releases/$release_id,target=/app/runtime-data,readonly" \
+  "$image_tag"
 ```
 
-Verify the page at `http://localhost:8501` and check:
+Verify the candidate at `http://127.0.0.1:8502`, inspect its health and logs, and record the bundle release ID and image digest. This local smoke run does not activate a production service. Target-host rollout and external hosting remain deployment-owner tasks.
 
 ```bash
-docker inspect --format '{{.State.Health.Status}}' vireo-support-intelligence
-docker logs vireo-support-intelligence
+docker inspect --format '{{.State.Health.Status}}' vireo-candidate
+docker logs vireo-candidate
+```
+
+For an approved target deployment, use the target platform's access controls and rollout process, publishing only the approved internal endpoint and matching the exact image/bundle pair. The app has no built-in authentication.
+
+Health can also be checked with:
+
+```bash
+docker exec vireo-candidate python -m app.healthcheck
 ```
 
 ## CI

@@ -181,4 +181,4 @@ Main folders:
 
 ## Submission artifacts
 
-See `docs/submission/memo.md`, `docs/submission/recording-notes.md`, and `docs/submission/submission-form.md`. The exact original submission form was not present in the repository, task attachments, or searched project workspace. No questions have been invented.
+See `docs/submission/memo.md`, `docs/submission/recording-notes.md`, `docs/submission/submission-form.md`, and `docs/submission/release-record.md`. The exact original submission form was not found in this repository; no questions have been invented. The release record names the ignored local bundle and locally built image; a fresh checkout must regenerate its own unique release bundle through the documented workflow.

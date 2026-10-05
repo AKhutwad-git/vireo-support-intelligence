@@ -22,3 +22,7 @@ Stage 3 intervals are approximate and assume independent tickets. Clustered case
 ## Readiness
 
 The deterministic analytical outputs and presentation layer are validated for this supplied source pack. Stage 7 verdict: **VALIDATED WITH MATERIAL LIMITATIONS**. This is an evaluation deliverable, not production deployment approval. No causal personnel finding or realized financial savings is claimed.
+
+## Release reference
+
+This memo describes application version `0.1.0`, bundle release `final-20261006-04`, generated from source commit `4b16ca55fa57a19214b6e3b1164b9ef24f4e000c`. See [the release record](release-record.md) for the local image and verification evidence. External hosting and target-host production approval are not claimed.

@@ -1,32 +1,40 @@
-# Production Acceptance Record
+# Final Release Acceptance Record
 
-This record is for a specific source revision, image digest, bundle release ID, and host. Fill evidence rather than inferring acceptance from repository implementation.
+This record describes the locally verified release source, bundle, and image. It is not production approval. The tracked evidence record may be committed after the release build; its release source SHA below is the SHA recorded in the bundle manifest and used to build the image.
 
-## Evidence record
+## Release identity
 
-| Gate | Result | Evidence / revision |
+- Release ID: `final-20261006-04`
+- Application version: `0.1.0`
+- Release source commit: `4b16ca55fa57a19214b6e3b1164b9ef24f4e000c`
+- Bundle pipeline worktree dirty: `false`
+- Bundle validation: `PASS` (manifest inventory, hashes, schemas, joins; 44 agents)
+- Stage 1–6 pipeline: `PASS`
+- Stage 7: `PASS`; verdict **VALIDATED WITH MATERIAL LIMITATIONS**
+- Stage 5/AI: unavailable; zero real provider requests and zero real predictions in this run
+
+## Verification evidence
+
+| Gate | Result | Evidence |
 | --- | --- | --- |
-| Full test suite | PASS (local working tree) | 119 passed, 1 skipped; 2026-10-05 |
-| Stages 1–6 pipeline | PASS | Controlled refresh `stage10-20261005-local1` |
-| Stage 7 evaluation and limitations review | PASS with material limitations | Controlled refresh; verdict unchanged |
-| Refresh gates and immutable bundle manifest | PASS | Release `stage10-20261005-local1`; 44 agents |
-| Exact-revision remote CI | NOT VERIFIED | Working tree is uncommitted; GitHub Actions API query returned 404 |
-| Docker build | PASS (local) | `vireo-support-intelligence:0.1.0`, image ID `61601566401d` |
-| Candidate container health and dashboard load | PASS (local simulation) | Docker healthy; semantic degraded for AI absence; 44 agents; health URL HTTP 200; rendered dashboard observed |
-| Browser filter/export check | NOT VERIFIED | Dashboard loaded; browser-level filter combinations and downloaded CSV persistence not independently checked |
-| Corrupt bundle detection and known-good preservation | PASS (local simulation) | Health returned unhealthy on manifest hash mismatch; immutable good bundle remained valid |
-| Rollback smoke | PASS (local simulation) | Saved Stage 9 image + prior bundle returned Docker healthy, health URL HTTP 200 |
-| Host authentication, TLS, network and security review | NOT VERIFIED | Must be evidenced by the deployment owner |
-| Monitoring and alert delivery | NOT VERIFIED | Procedures documented; no monitoring/paging platform configured here |
-| Rollback/restore drill | PARTIAL | Local image/bundle smoke only; no target-host traffic rollback or backup restore |
-| Release owner approval | PENDING | No deployment owner approval recorded |
+| Full test suite | PASS | 119 passed, 1 skipped, 0 failed; 2026-10-06. Run against the source changes committed as the release source revision. |
+| Exact-source pipeline and Stage 7 | PASS | `scripts/refresh_release.py --release-id final-20261006-04`; clean source revision in manifest |
+| Bundle schema, joins, inventory and hashes | PASS | `data/releases/final-20261006-04`; 9 inventoried files; 44 agents |
+| Image build | PASS (local) | `vireo-support-intelligence:0.1.0-final-20261006-04`; image ID/config digest and local image digest recorded in [`release-record.md`](../submission/release-record.md) |
+| Candidate runtime | PASS (local) | Container `vireo-final-20261006-04`; port 8504; UID/GID 999 `vireo`; Docker health `healthy`; release mount read-only |
+| Runtime semantic health | DEGRADED as expected | Deterministic data valid; 44 agents; six outputs validated; AI unavailable; process alive; no errors |
+| HTTP and rendered dashboard | PASS (local) | `/_stcore/health` HTTP 200; dashboard rendered in browser with 0 training candidates and 44 monitored agents |
+| Browser filter combinations / CSV persistence | NOT VERIFIED | Not exercised in this final-release run |
+| Exact-SHA remote CI | PASS | `python-tests` completed successfully for `4b16ca55fa57a19214b6e3b1164b9ef24f4e000c` |
+| Target-host deployment and security acceptance | NOT VERIFIED | Local Docker test only; no target-host evidence or owner approval |
+| Central monitoring and paging | NOT CONFIGURED | Operating contract documented; no external integration verified |
 
-## Acceptance rule
+## Acceptance interpretation
 
-Production acceptance requires every gate to pass for the same source revision and image/bundle pair, plus the host-owner checks and approval. The evidence above documents local Stage 10 simulation only. A local pass cannot substitute for remote CI or target-host security, monitoring, or operational evidence. An expected degraded state caused only by absent optional AI/Stage 7 bundle evidence may be accepted only when the release owner documents that decision; deterministic data and process health must pass.
+**Local release acceptance: verified with material limitations.** The repository release-acceptance gate returned `accepted=true` with tests, pipeline, Stage 7, bundle, image build, container startup, and exact-SHA CI marked PASS. This does not establish target-host deployment or approval. Browser filter/export persistence also remains unverified.
 
-The candidate manifest records base revision `db92ad1facc568cfff5aad537b14b9e3245cee16` with `pipeline_worktree_dirty=true`: the Stage 10 implementation is still uncommitted. Treat this bundle/image as verification artifacts only. After the implementation is reviewed and committed, rerun the gated refresh with a fresh release ID and build/tag the final image from that clean revision before any release approval.
+**Target-host production deployment: not verified.** Local validation does not establish target-host security, external monitoring, or production approval. Keep those items open until their specific evidence exists.
 
-## Known decision-use limitations
+## Analytical limitations
 
-Stage 5 model evaluation is unavailable. Stage 7's verdict remains **VALIDATED WITH MATERIAL LIMITATIONS**: intervals are approximate, agent-quality ground truth and genuine out-of-time validation are absent, and clustered case-mix uncertainty is incomplete. 567 tickets lack effective roster context, valid handle-time outliers remain, and SLA attribution uses resolver identity because first-response actor identity is absent. Dashboard results are decision support, not evidence of causality or guaranteed savings.
+Stage 5 real-model quality and cost evaluation are unavailable. Stage 7 remains **VALIDATED WITH MATERIAL LIMITATIONS**: uncertainty intervals are approximate; agent-quality ground truth and genuine out-of-time validation are absent; clustered case-mix uncertainty is incomplete; 567 tickets lack effective roster context; valid handle-time outliers are retained; and SLA is resolver-associated because verified first-responder identity is unavailable. AI does not drive deterministic decisions. The results do not establish agent causality or guaranteed savings.

@@ -1,37 +1,34 @@
-# Vireo Support Intelligence — Stage 10 Operations Checklist
+# Production and Submission Checklist
 
-This checklist separates repository evidence from host-owner acceptance. A checked local test does not imply that a production host, security boundary, or monitoring service exists.
+This checklist distinguishes local release evidence from target-host acceptance. A successful local container run does not imply production deployment approval.
 
-## Refresh and release
+## Current release evidence
 
-- [x] Refresh script gates packaging on Stages 1–6 reports, Stage 7, and unique Stage 1 ticket grain.
-- [x] Candidate bundle is built in an isolated directory, hashed, schema-validated, and installed under an immutable release ID.
-- [x] Existing bundle destinations are never overwritten; failed candidate validation does not promote.
-- [x] Runtime health verifies bundle inventory, sizes, SHA-256 hashes, version, and dashboard schemas.
-- [x] Run `scripts/refresh_release.py` successfully against the current source pack: release `stage10-20261005-local1`, 44 agents, Stages 1–6 PASS, Stage 7 PASS.
-- [x] Complete the local test suite (119 passed, 1 skipped), pipeline, Stage 7, image build, candidate container health, HTTP page health, and rendered dashboard check for this working tree.
-- [ ] Observe a successful remote CI run for the exact revision to be released. This working tree is uncommitted; the GitHub Actions API returned 404 for the prior `db92ad1` run query, so remote evidence is unavailable here.
-- [ ] Independently verify browser filter combinations and downloaded CSV persistence for the release candidate.
-- [ ] Release owner records approval and activates a version-paired image and bundle.
+- [x] Source commit `4b16ca55fa57a19214b6e3b1164b9ef24f4e000c` is on `origin/main` and the release build used a clean worktree.
+- [x] Stage 1–6 pipeline and Stage 7 passed for release `final-20261006-04`; Stage 7 verdict remains **VALIDATED WITH MATERIAL LIMITATIONS**.
+- [x] Immutable bundle `final-20261006-04` validates: version `0.1.0`, 44 agents, hashes/schema/joins pass, `pipeline_worktree_dirty=false`.
+- [x] Full local suite: 119 passed, 1 skipped, 0 failed.
+- [x] Image `vireo-support-intelligence:0.1.0-final-20261006-04` built locally from the release source commit; image digest is in `docs/submission/release-record.md`.
+- [x] Candidate `vireo-final-20261006-04` on port 8504 ran as UID/GID 999 `vireo`, with read-only bundle mount and Docker health `healthy`.
+- [x] Semantic health: deterministic data valid; 44 agents; six outputs validated; process alive; AI unavailable/degraded as expected.
+- [x] `/_stcore/health` returned HTTP 200; rendered dashboard showed 0 candidates and 44 monitor agents.
+- [x] Stage 7 generated report no longer claims repository documentation/dashboard/deployment artifacts are absent.
+- [x] Exact-SHA GitHub CI: `python-tests` completed successfully for `4b16ca55fa57a19214b6e3b1164b9ef24f4e000c`.
+- [ ] Browser filter combinations and CSV download persistence independently verified on this final candidate.
 
-## Runtime and recovery
+## External acceptance gates
 
-- [x] Operational, incident response, release, and acceptance procedures are documented.
-- [x] Health states, log signals, degraded AI behavior, refresh gates, rollback, and recovery are defined.
-- [ ] Host monitoring/alert delivery is configured and exercised by the deployment owner.
-- [ ] Actual deployment host has approved authentication, TLS, network restriction, secrets, and access controls.
-- [ ] Host owner completes backup/restore and rollback drill and records evidence.
-- [ ] Security review and production acceptance are signed by the responsible owner.
+- [ ] Target-host deployment and target-host security review approved.
+- [ ] Authentication/access boundary, TLS, network restriction, and secrets handling verified on the actual host.
+- [ ] Central monitoring, log collection, and paging/alert delivery configured and tested.
+- [ ] Target-host rollback/restore drill and release-owner approval recorded.
+- [ ] Original client submission form obtained; the repository file is only an internal status note.
 
-## Analytical/product limitations
+## Limitations that remain
 
-- [x] Stage 5 provider/model quality and cost evaluation is unavailable; AI remains optional and does not control numeric metrics.
-- [x] Stage 7 is validated with material limitations: approximate independent-ticket intervals, no quality ground truth, no genuine out-of-time validation, and no complete clustered case-mix uncertainty.
-- [x] 567 tickets lack effective roster context; valid handle-time outliers remain; SLA is associated with resolver identity because first-response actor identity is absent.
-- [x] Dashboard outputs are decision support and do not establish agent causality or guaranteed savings.
+- [x] Stage 5 real-model quality and cost evaluation are unavailable; no provider requests or real predictions occurred in this run.
+- [x] Stage 7 limitations remain: approximate intervals; no ground-truth personnel-quality measurement; no genuine out-of-time validation; incomplete clustered case-mix uncertainty.
+- [x] 567 tickets lack effective roster context; valid handle-time outliers remain; SLA is resolver-associated because verified first-responder identity is unavailable.
+- [x] Outputs are decision support, not causal personnel conclusions or guaranteed savings.
 
-## Current acceptance status
-
-Repository procedures and gated release tooling are implemented. The new candidate image is `vireo-support-intelligence:0.1.0` (image ID `61601566401d`) and release bundle is `stage10-20261005-local1`. Runtime Docker health was `healthy`; semantic health was `degraded` only because AI diagnostics were unavailable (deterministic data valid, 44 agents, 6 outputs validated, process alive). The page and `/_stcore/health` returned successfully in the isolated candidate. Corrupt-manifest simulation returned `unhealthy` with a bundle integrity error while the good immutable release remained valid. A separate rollback smoke using the saved Stage 9 image and its prior bundle returned healthy Docker status, degraded semantic health for expected AI absence, and HTTP 200. The pre-existing service on port 8501 was left unchanged.
-
-Production acceptance remains incomplete until exact-revision remote CI, browser filter/export verification, target-host security and monitoring, owner activation, and signed acceptance are evidenced. The candidate container was a local acceptance simulation, not production traffic.
+See [final acceptance](final_acceptance.md), [release record](../submission/release-record.md), [operations](operations.md), and [release process](release_process.md) for evidence and procedures.

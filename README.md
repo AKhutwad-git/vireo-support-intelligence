@@ -177,8 +177,8 @@ Main folders:
 - `agent_id` identifies the resolver, not necessarily the first responder; SLA is resolver-associated and not causal attribution.
 - Source timestamp provenance, text-quality detection gaps, and ambiguous source relationships are documented in the forensic report.
 - Cost exposure is observed population context, not agent-caused cost or guaranteed savings. Training costs are unavailable; no budget ROI is calculated.
-- `docs/submission/submission-form.md` records that the original client submission form was unavailable; its questions are not reconstructed.
+- `docs/submission/submission-form.md` contains responses to the actual questions included with the Task 1 brief; unknown personal/tool details and unverified link access are identified explicitly.
 
 ## Submission artifacts
 
-See `docs/submission/memo.md`, `docs/submission/recording-notes.md`, `docs/submission/submission-form.md`, and `docs/submission/release-record.md`. The exact original submission form was not found in this repository; no questions have been invented. The release record names the ignored local bundle and locally built image; a fresh checkout must regenerate its own unique release bundle through the documented workflow.
+See `docs/submission/memo.md`, `docs/submission/recording-notes.md`, `docs/submission/submission-form.md`, and `docs/submission/release-record.md`. The response form follows the actual Task 1 questions supplied with the brief. The release record names the ignored local bundle and locally built image; a fresh checkout must regenerate its own unique release bundle through the documented workflow.

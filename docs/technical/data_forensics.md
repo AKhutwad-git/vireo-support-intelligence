@@ -70,7 +70,7 @@ Generated from the current raw task pack. No business conclusions are calculated
 
 ## README source definitions
 
-`README.txt` was read (2635 characters). Its definitions remain authoritative; the file format is not assumed or auto-parsed. Populate `datasets` and `relationships` in configuration from those definitions before treating key or relationship checks as complete.
+`README.txt` was read (2604 characters). Its definitions remain authoritative; the file format is not assumed or auto-parsed. Populate `datasets` and `relationships` in configuration from those definitions before treating key or relationship checks as complete.
 
 ## Missingness and duplicates
 

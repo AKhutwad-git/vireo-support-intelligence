@@ -8,7 +8,7 @@ import os
 import pandas as pd
 import streamlit as st
 
-from dashboard_data import export_csv, load_dashboard_data, resolve_interim_dir, stage7_summary_json
+from dashboard_data import export_csv, filter_agent_rows, filter_value, load_dashboard_data, resolve_interim_dir, stage7_summary_json
 from runtime_health import classify_loaded_dashboard
 from vireo import __version__
 
@@ -63,13 +63,10 @@ def _filters(data):
         selections = {}
         for label, field in (("Tier", "agent_tier"), ("Team", "agent_team"), ("Site", "agent_site"), ("Shift", "agent_shift"),
                              ("Training status", "priority_status"), ("Peer group", "comparison_group")):
-            options = sorted({str(r.get(field)) for r in rows if r.get(field) is not None})
+            options = sorted({filter_value(r.get(field)) for r in rows})
             chosen = st.multiselect(label, options, default=options)
             selections[field] = set(chosen)
-    filtered = [r for r in rows if all(str(r.get(field)) in selected for field, selected in selections.items())]
-    if query.strip():
-        filtered = [r for r in filtered if query.strip().lower() in str(r.get("agent_id", "")).lower()]
-    return filtered
+    return filter_agent_rows(rows, selections, query)
 
 
 def _overview(data):

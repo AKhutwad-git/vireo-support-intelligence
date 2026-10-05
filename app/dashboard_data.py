@@ -36,6 +36,19 @@ def resolve_interim_dir(project_root: str | Path, interim_dir: str | Path | None
     return path.resolve()
 
 
+def filter_value(value) -> str:
+    """Give missing categorical values an explicit, selectable filter bucket."""
+    return "Unavailable" if value is None else str(value)
+
+
+def filter_agent_rows(rows: list[dict], selections: dict[str, set[str]], query: str = "") -> list[dict]:
+    filtered = [row for row in rows if all(filter_value(row.get(field)) in selected
+                                            for field, selected in selections.items())]
+    if query.strip():
+        filtered = [row for row in filtered if query.strip().lower() in str(row.get("agent_id", "")).lower()]
+    return filtered
+
+
 def load_dashboard_data(project_root: str | Path, interim_dir: str | Path | None = None) -> dict:
     """Load and validate current generated outputs; AI diagnostics are optional."""
     root = Path(project_root).resolve()

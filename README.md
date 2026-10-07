@@ -1,12 +1,16 @@
 # Vireo Support Intelligence
 
-A deterministic support-operations analysis and decision-support dashboard prepared for the Banao Technologies evaluation. It reports support performance, Tier-safe peer comparisons, observed economics, and evidence-gated training status. It does not infer agent causality or manufacture a bottom-ten list.
+A deterministic support-operations analysis and decision-support dashboard prepared for the Banao Technologies evaluation. It reports support performance, Tier-safe peer comparisons, observed economics, and evidence-gated training status. It does not infer agent causality or manufacture a bottom-ten training recommendation.
 
 ## Current result
 
 The current source pack contains 11,750 tickets from January 2025 through June 2026. Stage 6 reports **0 defensible training candidates and 44 monitor agents**. No agent meets the configured interval-based evidence threshold. Three point-estimate-only names from Stage 7 sensitivity (A3015, A3021, A3026) are exploratory and are not recommendations.
 
-Stage 7 passed 12 independent metric reconciliations, eight synthetic decision scenarios, 220 explanation checks, and reproducibility checks. Its readiness verdict is **VALIDATED WITH MATERIAL LIMITATIONS**. The intervals are approximate; there is no agent-quality ground truth, clustered case-mix uncertainty, genuine out-of-time validation, or real Stage 5 model evaluation.
+The Overview also provides **Bottom 10 — Review Queue** and **Top 5 — Bonus Review** as descriptive management-review lists ordered by a transparent composite of Tier-safe, case-mix-adjusted gaps. These lists do not change Stage 6 status and do not recommend retraining or determine bonuses. The current evidence supports allocating **₹0 of the ₹4,00,000 Q3 training budget to agent-specific retraining** and reserving the balance pending stronger evidence or targeted process investigation.
+
+The proposed numeric operational goal is to reduce the observed resolver-associated first-response SLA breach rate by **1 percentage point**, from **9.06% to 8.06%**. On the same 11,750-ticket denominator, the policy-credit sensitivity is approximately **₹41,125** (`11,750 × 0.01 × ₹350 per breach`). This is a proposed target and same-population sensitivity, not a forecast, causal estimate, realized savings, or guaranteed credit reduction.
+
+Stage 7 passed 12 independent metric reconciliations, eight synthetic decision scenarios, 220 explanation checks, and reproducibility checks. Its readiness verdict is **VALIDATED WITH MATERIAL LIMITATIONS**. The intervals are approximate; there is no agent-quality ground truth, clustered case-mix uncertainty, or genuine out-of-time validation. Stage 5's bounded real Gemini evaluation attempted 20 requests: only 3 produced schema-valid predictions, all matching their labels; 5 failed schema validation and 12 received HTTP 429. This does not establish overall model accuracy or production readiness.
 
 ## Requirements
 
@@ -69,7 +73,7 @@ Generate the pipeline outputs first, then start Streamlit:
 python -m uv run streamlit run app/streamlit_app.py
 ```
 
-The dashboard reads generated outputs; it does not rerun analysis on page refresh. It provides Overview, Agents, Agent Detail, and Methodology / Trust pages. The Agents page supports filters and CSV downloads. Stage 7 validation summary JSON is available on Methodology / Trust.
+The dashboard reads generated outputs; it does not rerun analysis on page refresh. It provides Overview, Agents, Agent Detail, an optional Product & Orders page when the new Stage 4 aggregates are present, and Methodology / Trust. The Product & Orders page shows descriptive product/SKU, order-channel, sufficiently supported lot, and agent exposure summaries; it does not change training decisions. Overview surfaces the business goal, budget decision, and review queues. The Agents page supports filters and CSV downloads. Stage 7 validation summary JSON is available on Methodology / Trust.
 
 ## Test
 
@@ -91,6 +95,7 @@ data/raw
   → Stage 2 deterministic metrics
   → Stage 3 Tier-safe peer and case-mix analysis
   → Stage 4 observed economics
+  → Stage 4 bounded product/order root-cause aggregates (row-safe order linkage)
   → Stage 5 optional AI diagnostics
   → Stage 6 deterministic training-priority decisions
   → Stage 7 reconciliation and robustness evaluation
@@ -166,18 +171,20 @@ Main folders:
 - `tests/`: unit and integration checks.
 - `docs/technical/`: metric definitions, methodology, audits and stage findings.
 - `docs/submission/`: evaluation memo and recording notes.
+- `docs/technical/product_order_root_cause_analysis.md`: deterministic product/order findings, denominators, and limitations for the supplied source pack.
+- `docs/technical/task1_remediation_audit.md`: pre-change requirement audit and Prompt 2 AI gap.
 
 ## Known limitations
 
 - Stage 3 confidence intervals are approximate and assume independent tickets; clustered case-mix uncertainty is not implemented.
 - There is no real-world ground truth for false-positive/false-negative rates and no genuine out-of-time validation.
-- Stage 5 has no real predictions, model-quality evaluation, or real model usage cost. AI remains unavailable in the current run.
+- The bounded Stage 5 Gemini evaluation attempted 20 requests: 3 predictions passed schema validation and matched labels, 5 failed schema validation, and 12 received HTTP 429. Only 3/20 cases were scored, so 3/3 is not overall model accuracy. Billed cost and complete usage-based cost are unknown; this does not establish model quality or production readiness.
 - 567 tickets lack effective roster context and are retained in aggregate metrics without peer comparison.
 - Handle-time calculations retain valid extreme values; elapsed resolution time is not paid labor time.
 - `agent_id` identifies the resolver, not necessarily the first responder; SLA is resolver-associated and not causal attribution.
 - Source timestamp provenance, text-quality detection gaps, and ambiguous source relationships are documented in the forensic report.
 - Cost exposure is observed population context, not agent-caused cost or guaranteed savings. Training costs are unavailable; no budget ROI is calculated.
-- `docs/submission/submission-form.md` contains responses to the actual questions included with the Task 1 brief; unknown personal/tool details and unverified link access are identified explicitly.
+- `docs/submission/submission-form.md` contains responses to the actual questions included with the Task 1 brief; unknown personal/tool details and unverified recording/Drive link access are identified explicitly. The GitHub repository page was reachable and labeled Public when checked on 2026-10-07, but the current local candidate changes are not yet committed or pushed.
 
 ## Submission artifacts
 

@@ -20,7 +20,7 @@ def classify_loaded_dashboard(data: dict) -> dict:
             "deterministic_data_status": "valid", "deterministic_data": "valid",
             "agent_count": len(data.get("agents", [])),
             "ai_status": "available" if ai_available else "unavailable",
-            "validated_output_count": 6, "validated_outputs": 6,
+            "validated_output_count": 7, "validated_outputs": 7,
             "process_status": "not_checked", "warnings": warnings, "errors": []}
 
 

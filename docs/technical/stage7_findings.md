@@ -66,9 +66,9 @@ Tier remains part of every peer key. Alternative peer calculations are raw direc
 - Stage 3 intervals are approximate and assume independent tickets; Stage 7 cluster bootstrap is a separate raw Tier/team diagnostic, not a replacement case-mix-adjusted interval.
 - Temporal and peer-definition tests are directional sensitivity analyses, not causal or out-of-time model validation.
 - The decision engine has no real-world ground truth for false-positive/negative rates.
-- The original client submission form is unavailable; external production hosting and centralized monitoring/paging are not configured.
+- A completed response form covering the actual Task 1 questions is present in `docs/submission/submission-form.md`; a separate blank client form template was not found. External production hosting and centralized monitoring/paging are not configured.
 
 ## Repository and deployment context
-- The repository includes a README, evaluation memo, recording notes, and a submission-form status note; the original client form was not found.
+- The repository includes a README, evaluation memo, recording notes, and completed Task 1 submission responses. The separate blank client form template was not found.
 - A Streamlit dashboard, Docker/deployment tools, release/refresh/promotion tools, operations documentation, and acceptance documentation are present.
 - Local Docker/release tooling is available. External hosting and centralized monitoring/paging are not configured or verified.

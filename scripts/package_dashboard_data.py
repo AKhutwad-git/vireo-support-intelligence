@@ -1,4 +1,4 @@
-"""Create a minimal, PII-reduced bundle for the dashboard container."""
+"""Create a minimal, data-reduced bundle for the dashboard container."""
 from __future__ import annotations
 
 import argparse
@@ -25,9 +25,11 @@ from app.bundle_validation import sha256_file, validate_dashboard_bundle
 
 TABLE_FIELDS = {
     "training_priority": sorted(REQUIRED_FIELDS["training_priority"] | {
-        "team", "tier", "peer_group", "priority_band", "diagnostic_state", "primary_signal", "secondary_signal",
+        "agent_name", "agent_site", "agent_shift", "team", "tier", "peer_group", "priority_band", "diagnostic_state", "primary_signal", "secondary_signal",
         "csat_gap", "handle_time_gap", "sla_gap", "metric_directions", "economic_context", "ai_evidence_status",
-        "training_theme", "roster_coverage", "priority_reason", "explanation", "limitations", "sample_size", "peer_agent_count"}),
+        "training_theme", "roster_coverage", "priority_reason", "explanation", "limitations", "sample_size", "peer_agent_count",
+        "review_score", "review_score_metric_count", "review_score_components", "review_score_status",
+        "peer_mean_csat", "peer_handle_time_mean", "peer_sla_breach_rate"}),
     "agent_comparison": sorted(REQUIRED_FIELDS["agent_comparison"] | {
         "agent_from_date", "agent_to_date", "peer_fallback_level", "peer_agent_count", "peer_supported", "period", "ticket_count",
         "csat_eligible_count", "csat_evidence_strength", "csat_gap_ci_lower", "csat_gap_ci_upper", "csat_gap_interval_direction",
@@ -38,6 +40,14 @@ TABLE_FIELDS = {
         "agent_team", "agent_tier", "agent_site", "agent_shift", "ticket_count", "completed_ticket_count",
         "internal_transfer_cost_exposure_inr"}),
     "agent_metrics": sorted(REQUIRED_FIELDS["agent_metrics"]),
+}
+
+OPTIONAL_ROOT_CAUSE_FIELDS = {
+    "product_sku_analysis": ["product_sku", "product_name", "product_family", "ticket_count", "completed_ticket_count", "replacement_eligible_count", "replacement_count", "replacement_rate", "replacement_exposure_inr", "csat_response_count", "mean_csat", "support_status"],
+    "product_family_analysis": ["product_family", "ticket_count", "completed_ticket_count", "replacement_eligible_count", "replacement_count", "replacement_rate", "replacement_exposure_inr", "csat_response_count", "mean_csat", "support_status"],
+    "order_channel_analysis": ["order_channel", "ticket_count", "completed_ticket_count", "replacement_eligible_count", "replacement_count", "replacement_rate", "replacement_exposure_inr", "csat_response_count", "mean_csat", "support_status"],
+    "product_lot_analysis": ["product_sku", "product_name", "product_family", "order_lot_code", "ticket_count", "completed_ticket_count", "replacement_eligible_count", "replacement_count", "replacement_rate", "replacement_exposure_inr", "csat_response_count", "mean_csat", "support_status"],
+    "agent_product_exposure": ["agent_id", "product_sku", "product_name", "product_family", "ticket_count", "completed_ticket_count", "replacement_eligible_count", "replacement_count", "replacement_rate", "replacement_exposure_inr", "csat_response_count", "mean_csat", "support_status", "product_ticket_count", "share_of_product_tickets", "agent_ticket_count", "share_of_agent_tickets"],
 }
 
 
@@ -68,6 +78,27 @@ def package_dashboard_data(source_dir: Path, output_dir: Path) -> dict:
                                   "format": "parquet", "schema_version": 1,
                                   "row_count": safe_table.num_rows, "columns": safe_table.column_names}
 
+        root_cause_included = False
+        for name, columns in OPTIONAL_ROOT_CAUSE_FIELDS.items():
+            source = source_dir / f"{name}.parquet"
+            if not source.is_file():
+                continue
+            table = pq.read_table(source)
+            missing = set(columns) - set(table.column_names)
+            if missing:
+                raise ValueError(f"{source.name} is missing dashboard fields: {', '.join(sorted(missing))}")
+            safe_table = table.select(columns)
+            pq.write_table(safe_table, staging / source.name, compression="zstd")
+            tables[source.name] = safe_table.num_rows
+            files[source.name] = {"purpose": f"Aggregate product/order analysis: {name.replace('_', ' ')}",
+                                  "format": "parquet", "schema_version": 1,
+                                  "row_count": safe_table.num_rows, "columns": safe_table.column_names}
+            root_cause_included = True
+        root_summary = source_dir / "product_order_root_cause_summary.json"
+        if root_cause_included and root_summary.is_file():
+            shutil.copyfile(root_summary, staging / root_summary.name)
+            files[root_summary.name] = {"purpose": "Product/order root-cause aggregate summary", "format": "json", "schema_version": 1}
+
         stage2 = json.loads((source_dir / "stage2_metrics_report.json").read_text(encoding="utf-8"))
         stage4 = json.loads((source_dir / "stage4_economics_report.json").read_text(encoding="utf-8"))
         stage2_summary = {"status": stage2.get("status"), "overall_metrics": stage2["overall_metrics"]}
@@ -76,6 +107,12 @@ def package_dashboard_data(source_dir: Path, output_dir: Path) -> dict:
         (staging / "stage4_dashboard_summary.json").write_text(json.dumps(stage4_summary, indent=2) + "\n", encoding="utf-8")
         files["stage2_dashboard_summary.json"] = {"purpose": "Stage 2 aggregate metric summary", "format": "json", "schema_version": 1}
         files["stage4_dashboard_summary.json"] = {"purpose": "Stage 4 aggregate economics summary", "format": "json", "schema_version": 1}
+
+        stage6_summary_path = source_dir / "stage6_dashboard_summary.json"
+        if not stage6_summary_path.is_file():
+            raise FileNotFoundError("Stage 6 dashboard summary is required for review lists, budget, and business goal")
+        shutil.copyfile(stage6_summary_path, staging / stage6_summary_path.name)
+        files[stage6_summary_path.name] = {"purpose": "Stage 6 review queues, budget decision, and operational goal", "format": "json", "schema_version": 1}
 
         ai_report_path = source_dir / "ai_run_report.json"
         if ai_report_path.exists():
@@ -126,6 +163,7 @@ def package_dashboard_data(source_dir: Path, output_dir: Path) -> dict:
                     "contains_raw_source_data": False, "table_row_counts": tables,
                     "files": files, "provenance": provenance,
                     "optional_ai_outputs_included": (staging / "ai_agent_diagnostics.parquet").exists(),
+                    "product_order_analysis_included": root_cause_included,
                     "stage7_validation_included": (staging / "stage7_validation_report.json").exists()}
         (staging / "deployment_manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
         validate_dashboard_bundle(staging)

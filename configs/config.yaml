@@ -22,15 +22,15 @@ stage3:
 ai:
   enabled: false
   provider: openai_compatible
-  endpoint: https://api.openai.com/v1/chat/completions
-  model: unset
+  endpoint: https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
+  model: gemini-2.5-flash
   api_key_env: VIREO_AI_API_KEY
   selection_mode: top_n
-  max_population: 250
-  top_n: 250
+  max_population: 20
+  top_n: 20
   sample_size: 100
   random_seed: 1701
-  batch_size: 10
+  batch_size: 1
   signals: [low_csat, high_handle_time, sla_breach, repeat_contact, refund_or_replacement, multiple_transfers]
   output_token_estimate_per_ticket: 180
   monthly_volume_tickets_per_week: 650
@@ -40,12 +40,13 @@ ai:
     source: null
     input_per_million_usd: null
     output_per_million_usd: null
-  cache_path: data/interim/ai_cache.jsonl
+  cache_path: data/interim/ai_real_evaluation_cache.jsonl
 
 # Stage 6 uses only directionally adverse Stage 3 intervals for a training concern.
 # Economic exposure and AI diagnostics are explanatory context and do not affect score.
 stage6:
   training_budget_inr: 400000
+  business_goal_sla_reduction_percentage_points: 1.0
   minimum_agent_tickets: 30
   minimum_metric_observations: 30
   minimum_adjustment_coverage: 0.70

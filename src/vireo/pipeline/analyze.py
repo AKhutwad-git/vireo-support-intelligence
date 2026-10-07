@@ -302,10 +302,13 @@ def run_training_priority(interim_dir: Path, config: dict[str, Any], project_roo
     import pyarrow as pa
     import pyarrow.parquet as pq
     from vireo.scoring.priority import build_priority_rows, sensitivity_summary
+    from vireo.scoring.review import build_review_lists
+    from vireo.scoring.business_goal import build_sla_business_goal, build_training_budget_decision
+    from vireo.policy.economics import SLA_BREACH_CREDIT_INR
 
     project_root = project_root or Path(__file__).resolve().parents[3]
     names = ("adjusted_agent_metrics", "agent_comparison", "agent_economics", "agent_metrics",
-             "agent_assignment_metrics", "ai_agent_diagnostics", "ai_ticket_analysis")
+             "agent_assignment_metrics", "ai_agent_diagnostics", "ai_ticket_analysis", "normalized_agents")
     tables = {name: pq.read_table(interim_dir / f"{name}.parquet").to_pylist() for name in names}
     for dataset in ("agent_metrics", "agent_economics"):
         ids = [r.get("agent_id") for r in tables[dataset]]
@@ -340,7 +343,26 @@ def run_training_priority(interim_dir: Path, config: dict[str, Any], project_roo
     comparison_rows.extend(r for r in tables["adjusted_agent_metrics"] if r.get("period_type") == "quarter")
     stage6_config = config.get("stage6", {})
     decisions = build_priority_rows(comparison_rows, tables["agent_metrics"], tables["agent_economics"], ai_rows, ai_status, stage6_config)
+    roster_names = {}
+    name_sets = defaultdict(set)
+    for roster_row in tables["normalized_agents"]:
+        if roster_row.get("agent_id") and roster_row.get("name"):
+            name_sets[roster_row["agent_id"]].add(str(roster_row["name"]).strip())
+    roster_names = {agent_id: next(iter(values)) for agent_id, values in name_sets.items() if len(values) == 1}
+    for decision in decisions:
+        decision["agent_name"] = roster_names.get(decision["agent_id"])
     sensitivity = sensitivity_summary(decisions, comparison_rows, tables["agent_metrics"], tables["agent_economics"], ai_rows, ai_status, stage6_config)
+    review_lists = build_review_lists(decisions)
+    stage2_report = json.loads((interim_dir / "stage2_metrics_report.json").read_text(encoding="utf-8"))
+    overall_metrics = stage2_report.get("overall_metrics", {})
+    business_goal = build_sla_business_goal(
+        overall_metrics,
+        reduction_percentage_points=float(stage6_config.get("business_goal_sla_reduction_percentage_points", 1.0)),
+        policy_credit_per_breach_inr=SLA_BREACH_CREDIT_INR)
+    candidate_count = sum(r["priority_status"] == "training_candidate" for r in decisions)
+    budget_decision = build_training_budget_decision(
+        float(stage6_config.get("training_budget_inr", 400000)), candidate_count,
+        training_cost_data_available=False)
     output_path = interim_dir / "training_priority.parquet"
     pq.write_table(pa.Table.from_pylist(decisions), output_path, compression="zstd")
     band_counts = Counter(r["priority_band"] for r in decisions)
@@ -360,12 +382,19 @@ def run_training_priority(interim_dir: Path, config: dict[str, Any], project_roo
         for tier, metrics in raw_bottom.items()}
     report = {"status": "PASS", "stage": 6, "decision_method": "interval-gated deterministic score; economic and AI evidence are context only",
         "agents_evaluated": len(decisions), "agents_excluded_or_not_rankable": sum(r["priority_status"] == "not_rankable" for r in decisions),
+        "training_candidate_count": candidate_count,
         "eligible_agents": sum(not r["eligibility_gates"] for r in decisions), "priority_status_counts": dict(status_counts),
         "priority_band_counts": dict(band_counts), "high_priority_count": band_counts.get("high", 0),
         "insufficient_evidence_count": gate_counts.get("insufficient_evidence", 0), "eligibility_gate_counts": dict(gate_counts),
         "tier_counts": dict(Counter(str(r.get("tier")) for r in decisions)), "ai_evidence_status": ai_status,
         "ai_diagnostic_agent_rows": len(ai_rows), "invalid_ai_representative_ticket_references_removed": len(bad_refs),
         "training_budget_inr": float(stage6_config.get("training_budget_inr", 400000)), "training_cost_data_available": False,
+        "training_budget_decision": budget_decision,
+        "business_goal": business_goal,
+        "review_lists": {"definition": review_lists["definition"],
+            "ranked_agent_count": review_lists["ranked_agent_count"],
+            "bottom10_agent_ids": [r["agent_id"] for r in review_lists["bottom10_review"]],
+            "top5_bonus_agent_ids": [r["agent_id"] for r in review_lists["top5_bonus_review"]]},
         "training_cost_inr": None, "raw_rank_definition": "Separate descriptive within-tier ranks for adjusted CSAT, handle-time, and SLA point estimates; not a composite decision rank.",
         "stage3_uncertainty_finding": "All reported adjusted full-period gap intervals overlapped zero; no point estimate alone is treated as confirmed underperformance.",
         "sensitivity": sensitivity,
@@ -378,12 +407,17 @@ def run_training_priority(interim_dir: Path, config: dict[str, Any], project_roo
             "agent_assignment_period_rows": len(tables["agent_assignment_metrics"])},
         "outputs": {"training_priority": {"path": str(output_path), "row_count": len(decisions)}},
         "priority_explanations": [r["explanation"] for r in decisions],
-        "limitations": ["Priority ranking is observational and not a causal personnel assessment.",
+        "limitations": ["Stage 6 training priority is an evidence-gated decision; Bottom 10 and Top 5 are separate descriptive review queues, not personnel recommendations.",
             "Stage 5 has no validated real-model evaluation; AI is optional and does not affect numeric score.",
             "Approximate Stage 3 intervals assume independent tickets and may understate uncertainty.",
             "Economic exposure is associated with resolved-ticket populations and is not attributed savings.",
-            "Training costs are unavailable; the ₹4,00,000 budget is not allocated or treated as ROI."]}
+            "Training costs are unavailable; no agent-specific retraining spend is allocated and reserved funds are not savings or ROI."]}
     (interim_dir / "training_priority_report.json").write_text(json.dumps(report, indent=2, ensure_ascii=False, default=str) + "\n", encoding="utf-8")
+    dashboard_summary = {key: report[key] for key in ("status", "stage", "training_budget_inr",
+        "training_cost_data_available", "training_candidate_count", "training_budget_decision",
+        "business_goal", "review_lists", "ai_evidence_status", "limitations")}
+    (interim_dir / "stage6_dashboard_summary.json").write_text(
+        json.dumps(dashboard_summary, indent=2, ensure_ascii=False, default=str) + "\n", encoding="utf-8")
     _write_stage6_findings(project_root / "docs" / "technical" / "stage6_findings.md", decisions, report)
     return report
 
@@ -404,6 +438,19 @@ def _write_stage6_findings(path: Path, decisions: list[dict[str, Any]], report: 
     lines.append("- Exploratory point-estimate-only candidates (not selected by default): " + (", ".join(exploratory) if exploratory else "none") + ".")
     lines.append(f"- AI available/unavailable numeric-score invariance: `{report['sensitivity']['ai_status_invariance_verified']}`.")
     lines.extend(["", "## Limitations", "", *[f"- {item}" for item in report["limitations"]],
-        "", "No causal attribution, budget allocation, final client recommendation, or Stage 7 reliability claim is made.", ""])
+        "", "## Management-review queues", "",
+        "Bottom 10 and Top 5 are descriptive, peer-adjusted review lists only. Neither list changes Stage 6 training status or determines bonuses.",
+        f"- Bottom 10 review IDs: {', '.join(report['review_lists']['bottom10_agent_ids']) or 'none'}.",
+        f"- Top 5 bonus review IDs: {', '.join(report['review_lists']['top5_bonus_agent_ids']) or 'none'}.",
+        "", "## Business goal and budget", ""])
+    goal = report["business_goal"]
+    if goal.get("status") == "proposed_operational_target":
+        lines.append(f"- Proposed goal: reduce resolver-associated first-response SLA breach rate from {goal['baseline_rate']:.2%} to {goal['target_rate']:.2%} ({goal['target_reduction_percentage_points']:.2f} percentage points).")
+        lines.append(f"- Same-population policy-credit sensitivity: ₹{goal['policy_credit_context_same_population_inr']:,.0f}; not a forecast, realized saving, or causal estimate.")
+    budget = report["training_budget_decision"]
+    lines.extend([f"- Q3 training budget: ₹{budget['training_budget_inr']:,.0f}.",
+        f"- Agent-specific retraining allocation from current evidence: ₹{budget['recommended_agent_specific_allocation_inr']:,.0f}; reserve ₹{budget['reserved_pending_evidence_or_costing_inr']:,.0f}.",
+        "- Reserved funds are not savings. Training cost inputs are unavailable.",
+        "", "No causal attribution or bonus decision is made. Stage 7 separately evaluates robustness and retains its limitations.", ""])
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines), encoding="utf-8", newline="\n")

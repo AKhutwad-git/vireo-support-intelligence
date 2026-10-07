@@ -1,6 +1,6 @@
 # Release Record
 
-This records the locally verified application/bundle pair. It is not a target-host deployment approval.
+This records the historical `final-20261006-04` application/bundle pair. The later candidate currently running on ports 8501 and 8505 is not represented by this source SHA or test count; its local verification is recorded in `docs/technical/final_acceptance.md`. Neither record is target-host deployment approval.
 
 | Field | Value |
 | --- | --- |

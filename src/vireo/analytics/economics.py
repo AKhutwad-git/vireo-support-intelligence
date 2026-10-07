@@ -11,6 +11,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 from vireo.analytics.opportunity import opportunity_scenarios
+from vireo.analytics.product_order import build_product_order_analysis, write_product_order_analysis
 from vireo.analytics.peer_groups import assignment_key
 from vireo.analytics.repeat_contacts import detect_repeat_contacts
 from vireo.policy.economics import (calculate_replacement_cost, calculate_sla_breach_cost,
@@ -163,6 +164,9 @@ def run_stage4_economics(interim_dir: Path, config: dict[str, Any]) -> dict[str,
     tickets = calculate_ticket_economics(metrics, tables["normalized_products"].to_pylist(), tables["peer_groups"].to_pylist(), config.get("reporting_timezone", "Asia/Kolkata"))
     if len(tickets) != len(metrics):
         raise ValueError("Ticket economics changed ticket grain")
+    product_order_analysis = build_product_order_analysis(
+        metrics, tables["normalized_orders"].to_pylist(), tables["normalized_products"].to_pylist(), tickets)
+    product_order_summary = write_product_order_analysis(interim_dir, product_order_analysis)
     periods = []
     periods.extend({"period_type": "full_available_period", "period": "all", **r} for r in _aggregate(tickets, []))
     periods.extend({"period_type": "month", "period": r["reporting_month"], **r} for r in _aggregate([r for r in tickets if r["reporting_month"]], ["reporting_month"]))
@@ -193,6 +197,8 @@ def run_stage4_economics(interim_dir: Path, config: dict[str, Any]) -> dict[str,
         pq.write_table(pa.Table.from_pylist(rows) if rows else pa.table({}), interim_dir / f"{name}.parquet", compression="zstd")
     report = _make_report(tickets, periods, channels, teams, peers, scenarios, tables, config)
     report["outputs"] = {name: {"path": str(interim_dir / f"{name}.parquet"), "row_count": len(rows)} for name, rows in outputs.items()}
+    report["product_order_analysis"] = product_order_summary
+    report["outputs"].update(product_order_summary["outputs"])
     (interim_dir / "stage4_economics_report.json").write_text(json.dumps(report, indent=2, ensure_ascii=False, default=str) + "\n", encoding="utf-8")
     _write_findings(interim_dir, report)
     return report

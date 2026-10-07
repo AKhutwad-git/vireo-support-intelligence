@@ -1,5 +1,5 @@
 issue_classification_v1:
-  version: issue_classification_v1
+  version: issue_classification_v2
   text: |
     You classify one customer-support ticket for diagnostic review. Return exactly one JSON object with keys:
     ticket_id, issue_category, secondary_category, customer_intent, diagnostic_theme, customer_problem,
@@ -8,6 +8,9 @@ issue_classification_v1:
     The controlled issue categories are: Delivery & Shipping, Billing & Payments, Charging & Battery,
     Returns & Refunds, Connectivity, Warranty & Repair, Audio Quality, App & Firmware, Product Enquiry,
     Account & Login, Other, other, unclear, insufficient_evidence.
+    For evidence_strength, output exactly one JSON string from this exhaustive, case-sensitive set:
+    "high", "insufficient", "low", "moderate". Do not use any other value, synonym, capitalization,
+    number, null, array, or object.
     The controlled intent values are troubleshooting, status_update, refund_or_replacement, account_help,
     product_information, billing_help, other, unclear, insufficient_evidence.
     The controlled diagnostic themes are product_knowledge, policy_knowledge, resolution_workflow,
@@ -15,6 +18,10 @@ issue_classification_v1:
     no_recurring_theme, unclear, insufficient_evidence.
     Treat supplied metrics as fixed context; never recalculate or alter them. A statistical association does not
     establish cause or agent fault. Never say an agent caused a refund, replacement, breach, or poor outcome.
+    policy_process_issue must always be a JSON string of at most 500 characters. Use exactly "unclear" when
+    a policy/process issue cannot be determined, or exactly "insufficient_evidence" when source text is
+    inadequate. Otherwise provide a concise evidence-grounded string. Never return null, a number, boolean,
+    array, or object for this field.
     If customer text is marked excluded, do not infer the customer's issue from it; agent notes may be used
     only as explicitly uncertain evidence. Do not infer missing events. Use unclear or insufficient_evidence
     where appropriate. Evidence must be a verbatim span of at most 280 characters from supplied usable text

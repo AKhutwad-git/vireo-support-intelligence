@@ -24,11 +24,13 @@ Quarterly stability counts intervals wholly adverse/favorable per metric. At lea
 
 ## Ranking and tier safety
 
-Priority ranks are assigned only to `training_candidate` rows and only within the same Tier and comparison group. `monitor` and not-rankable rows have no priority rank. Separate descriptive raw metric ranks are reported for adjusted CSAT, handle time, and SLA point estimates within Tier; they are not combined into a raw composite ranking. Tier 1 and Tier 2 are never pooled.
+Training priority ranks are assigned only to `training_candidate` rows and only within the same Tier and comparison group. `monitor` and not-rankable rows have no training priority rank. Separately, the dashboard provides Bottom 10 and Top 5 management-review queues. Their review score is the weighted mean of peer-adjusted CSAT gap / 0.5, negative relative handle-time gap / 0.25, and negative SLA gap / 0.05, with each component capped to [-1, 1] and weights 0.40 / 0.35 / 0.25. The score is expressed from -100 (adverse point estimates) to +100 (favorable point estimates); unavailable metrics are omitted and available weights renormalized. Each baseline remains the agent's supported Tier-safe peer comparison; raw metric levels and ticket volume do not determine rank. Score ties break by `agent_id`. The queues surface existing evidence strength, uncertainty, and Stage 6 status and are never retraining or bonus decisions. Tier 1 and Tier 2 are not pooled into peer baselines.
 
 ## Economics, budget, and AI
 
-Stage 4 exposures are included only as population-level context (operational, transfer, replacement, refund, and total relevant exposure). They are not included in the priority score because they are not controllable-cost estimates or causal attribution. The ₹4,00,000 training budget is recorded, but agent training costs are unavailable, so no allocation or ROI is calculated.
+Stage 4 exposures are included only as population-level context (operational, transfer, replacement, refund, and total relevant exposure). They are not included in the priority score because they are not controllable-cost estimates or causal attribution. When the evidence gate yields zero candidates, the dashboard recommends ₹0 for agent-specific retraining and reserves the ₹4,00,000 budget pending stronger evidence or targeted process investigation. Training-cost data is unavailable; the reserve is not savings and no ROI is calculated.
+
+The Overview also states a proposed operational goal to reduce the resolver-associated first-response SLA breach rate by 1 absolute percentage point from the supplied-data baseline. Its policy-credit sensitivity uses the same observed eligible-ticket count and ₹350 per breach. It is not a forecast, causal estimate, or guaranteed credit reduction.
 
 AI status is one of `available`, `partial`, `unavailable`, or `failed`. Themes and cited tickets can appear in a candidate explanation only when a validated Stage 5 row is available. AI confidence never substitutes for sample evidence or uncertainty. The current run has no configured real provider, so AI is unavailable and all numeric decisions use deterministic data only.
 

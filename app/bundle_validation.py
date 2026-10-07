@@ -70,5 +70,5 @@ def validate_dashboard_bundle(bundle_dir: str | Path, *, check_application_versi
     if not isinstance(provenance, dict) or not provenance.get("source_snapshot_sha256") or not provenance.get("decision_config_sha256"):
         raise ValueError("Bundle provenance is incomplete")
     return {"status": "valid", "application_version": manifest["application_version"],
-            "agent_count": len(data["agents"]), "validated_output_count": 6,
+            "agent_count": len(data["agents"]), "validated_output_count": 7,
             "manifest": manifest}

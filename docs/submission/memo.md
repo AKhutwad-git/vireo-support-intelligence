@@ -1,28 +1,25 @@
-# Banao Technologies Evaluation Memo
+# Memo to Priya Raman
 
-## Product
+## Decision
 
-Vireo Support Intelligence is a deterministic support analytics and decision-support application. It consolidates ticket, roster, product, policy, and cost inputs; calculates operational measures; compares agents within Tier-safe peers; and surfaces evidence-gated training priority with economic context. A Streamlit dashboard presents the generated outputs and downloadable tables.
+Do not direct the Q3 training reserve to agent-specific retraining on this evidence. The decision engine finds **0 defensible training candidates** and keeps all **44 agents under monitoring**. The Bottom 10 and Top 5 are management review queues, not retraining or bonus decisions.
 
-## Verified results
+## Rupees
 
-- Reporting population: 11,750 tickets, January 2025 through June 2026; latest available quarter: 2026 Q2.
-- 11,183 completed tickets; 4,947 completed-ticket CSAT responses; mean CSAT 3.33/5.
-- Median elapsed handle time: 29 minutes; SLA breaches: 1,064 (9.1%); transfers: 1,215.
-- Stage 4 observed exposure: ₹3,253,060 contact, ₹3,415,990 replacement, and ₹5,350,871 refund exposure. These are separate observed categories and are not agent-caused costs or guaranteed savings.
-- Stage 6: 0 agents meet the default evidence threshold for a defensible training recommendation; 44 are monitor.
-- Stage 7: all 12 independent reconciliations and eight synthetic decision scenarios passed; 220 explanation checks passed; deterministic reruns matched.
+The proposed operational goal is to reduce the resolver-associated first-response SLA breach rate by **1 percentage point**, from **9.06% (1,064/11,750)** to **8.06%** on a comparable population. On the same ticket denominator, that is about **118 fewer breach events** and **₹41,125** in policy-credit context at ₹350 per breach. This is a same-population sensitivity, not a forecast or savings claim.
 
-## Decision and limitations
+The analysis records **₹3,253,060 contact exposure**, **₹3,415,990 replacement exposure**, and **₹5,350,871 refund exposure** as separate observed categories. They are not agent-caused costs or guaranteed savings. Training costs are unavailable, so no training ROI is calculated.
 
-The client request for a bottom-ten list is not supported by current uncertainty evidence. The default decision gate was retained. Point-estimate-only sensitivity surfaced A3015, A3021, and A3026 as exploratory examples only; none is recommended.
+## Product and order finding
 
-Stage 3 intervals are approximate and assume independent tickets. Clustered case-mix uncertainty, genuine out-of-time validation, and ground-truth agent-quality error measurement are not available. Stage 5 is partial: there are no real model predictions, model-quality evaluation, or real usage-cost measurements. 567 tickets lack effective roster context. Handle-time outliers are retained. SLA is associated with resolver identity because first-responder identity is unavailable.
+VA-EB-PL2 had **1,166 replacements among 4,402 eligible tickets (26.49%)**, compared with **730/7,348 (9.93%)** for other SKUs. Completed-ticket CSAT was **3.07/5 (1,854 responses)** for PL2 and **3.48/5 (3,093 responses)** for other SKUs. **31 lots** meet the 30-ticket support floor for descriptive comparison. Amazon, Flipkart, and vireo.in replacement rates are similar, at **15.5%–15.9%**. Order linkage matched **10,817/11,750 tickets**; **933** remained ambiguous.
 
-## Readiness
+## Action
 
-The deterministic analytical outputs and presentation layer are validated for this supplied source pack. Stage 7 verdict: **VALIDATED WITH MATERIAL LIMITATIONS**. This is an evaluation deliverable, not production deployment approval. No causal personnel finding or realized financial savings is claimed.
+Investigate PL2 product and lot records, warranty handling, and order history before assigning training spend. Keep **₹400,000 reserved** and allocate **₹0** to agent-specific retraining unless stronger agent-specific evidence emerges. The review queues can guide human review but do not change the evidence gate.
 
-## Release reference
+## Attribution and evidence limits
 
-This memo describes application version `0.1.0`, bundle release `final-20261006-04`, generated from source commit `4b16ca55fa57a19214b6e3b1164b9ef24f4e000c`. See [the release record](release-record.md) for the local image and verification evidence. External hosting and target-host production approval are not claimed.
+PL2 exposure is broad: 43 of 44 agents handled at least 30 PL2 cases. The observed product, lot, and agent-product patterns are investigation leads; they do not establish a manufacturing defect, agent fault, avoidable cost, or causality. The data identifies the resolver, not necessarily the first responder, so SLA is resolver-associated.
+
+The deterministic analysis passed 12 metric reconciliations, eight synthetic decision scenarios, 220 explanation checks, and reproducibility checks. Stage 7 remains **VALIDATED WITH MATERIAL LIMITATIONS**: uncertainty intervals are approximate, clustered case-mix uncertainty and genuine out-of-time validation are absent, and there is no agent-quality ground truth. The bounded Gemini evaluation attempted 20 requests; only 3 produced schema-valid predictions, and all 3 matched their labels. Five failed schema validation and 12 received HTTP 429. The 3/3 result is not overall accuracy; model quality and billed cost are not established.

@@ -4,6 +4,8 @@ from __future__ import annotations
 from collections import Counter, defaultdict
 from math import isfinite
 
+from vireo.scoring.review import review_score_fields
+
 
 METRICS = {
     "csat": {"gap": "csat_gap", "lower": "csat_gap_ci_lower", "upper": "csat_gap_ci_upper",
@@ -201,7 +203,10 @@ def build_priority_rows(comparisons, agent_metrics, economics, ai_rows, ai_statu
                             "Observed differences are not causal evidence about agent behavior."])
         raw_ranks = {"csat_low_is_worse": None, "handle_time_high_is_worse": None, "sla_high_is_worse": None}
         rows.append({"agent_id": agent_id, "team": base.get("agent_team"), "tier": base.get("agent_tier"),
+            "agent_site": base.get("agent_site"), "agent_shift": base.get("agent_shift"),
             "peer_group": base.get("comparison_group"), "comparison_group": base.get("comparison_group"),
+            "peer_supported": base.get("peer_supported") is True,
+            "comparison_status": base.get("comparison_status"),
             "priority_status": priority_status, "priority_rank": None, "priority_band": band,
             "priority_score": score, "eligibility_gates": sorted(set(gates)), "primary_signal": _primary_signal(metric_directions, base),
             "secondary_signal": _secondary_signal(metric_directions, base), "csat_gap": _num(base.get("csat_gap")),
@@ -233,7 +238,11 @@ def build_priority_rows(comparisons, agent_metrics, economics, ai_rows, ai_statu
                 "economic_context": "Observed population exposure is contextual only; it is not attributed savings.",
                 "caution": "Performance differences are observational; Stage 3 approximate uncertainty intervals must be considered."},
             "limitations": limitations, "sample_size": int(base.get("ticket_count") or 0),
-            "peer_agent_count": int(base.get("peer_agent_count") or 0)})
+            "peer_agent_count": int(base.get("peer_agent_count") or 0),
+            "peer_mean_csat": _num(base.get("peer_mean_csat")),
+            "peer_handle_time_mean": _num(base.get("peer_handle_time_mean")),
+            "peer_sla_breach_rate": _num(base.get("peer_sla_breach_rate")),
+            **review_score_fields(base, config)})
     _assign_raw_ranks(rows)
     _assign_priority_ranks(rows)
     return rows

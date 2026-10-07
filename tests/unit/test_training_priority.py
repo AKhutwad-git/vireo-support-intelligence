@@ -28,6 +28,7 @@ def test_builds_explained_priority_and_tier_safe_rank():
     out=build_priority_rows(comp,agents,econ,[],"unavailable",{"minimum_agent_tickets":30,"minimum_metric_observations":30})
     assert len(out)==2
     assert all(r["priority_status"]=="training_candidate" and r["priority_band"]=="high" for r in out)
+    assert all(r["review_score_status"] == "descriptive_peer_adjusted_review_only" for r in out)
     assert {r["priority_rank"] for r in out}=={1,2}
     assert all(r["ai_evidence_status"]=="unavailable" and not r["representative_ticket_ids"] for r in out)
     assert "not causal" in out[0]["priority_reason"] or "Adverse adjusted" in out[0]["priority_reason"]

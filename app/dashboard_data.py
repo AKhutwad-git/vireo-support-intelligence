@@ -9,9 +9,14 @@ from pathlib import Path
 
 import pyarrow.parquet as pq
 
+from vireo.scoring.review import build_review_lists
+
 
 REQUIRED_FIELDS = {
-    "training_priority": {"agent_id", "priority_status", "priority_score", "priority_rank", "priority_reason", "evidence_strength", "stability", "uncertainty", "representative_ticket_ids"},
+    "training_priority": {"agent_id", "agent_name", "agent_site", "agent_shift", "peer_supported", "comparison_status",
+        "review_score", "review_score_metric_count", "review_score_components", "review_score_status",
+        "peer_mean_csat", "peer_handle_time_mean", "peer_sla_breach_rate",
+        "priority_status", "priority_score", "priority_rank", "priority_reason", "evidence_strength", "stability", "uncertainty", "representative_ticket_ids"},
     "agent_comparison": {"agent_id", "period_type", "agent_team", "agent_tier", "agent_site", "agent_shift", "comparison_group", "raw_mean_csat", "peer_mean_csat", "csat_gap", "raw_handle_time_mean", "peer_handle_time_mean", "handle_time_gap", "raw_sla_breach_rate", "peer_sla_breach_rate", "sla_gap"},
     "agent_economics": {"agent_id", "total_relevant_exposure_inr", "operational_cost_exposure_inr", "replacement_exposure_inr", "refund_exposure_inr"},
     "agent_metrics": {"agent_id", "ticket_count", "completed_ticket_count", "csat_completed_response_count", "csat_response_rate", "mean_csat", "handle_time_median", "sla_breach_count", "sla_eligible_count", "sla_breach_rate", "total_transfers"},
@@ -94,6 +99,18 @@ def load_dashboard_data(project_root: str | Path, interim_dir: str | Path | None
     if not ai_path_report.exists():
         ai_path_report = interim / "ai_run_report.json"
     ai_report = json.loads(ai_path_report.read_text(encoding="utf-8")) if ai_path_report.exists() else {}
+    stage6_path = interim / "stage6_dashboard_summary.json"
+    stage6 = json.loads(stage6_path.read_text(encoding="utf-8")) if stage6_path.exists() else {}
+    root_cause = {}
+    for key, filename in (("product_sku", "product_sku_analysis.parquet"),
+                          ("product_family", "product_family_analysis.parquet"),
+                          ("order_channel", "order_channel_analysis.parquet"),
+                          ("lot", "product_lot_analysis.parquet"),
+                          ("agent_product", "agent_product_exposure.parquet")):
+        path = interim / filename
+        root_cause[key] = _read_parquet(path) if path.is_file() else []
+    root_cause_summary_path = interim / "product_order_root_cause_summary.json"
+    root_cause["summary"] = json.loads(root_cause_summary_path.read_text(encoding="utf-8")) if root_cause_summary_path.is_file() else None
     quarters = stage4.get("available_quarters") or stage4.get("quarters") or []
     if not quarters and (interim / "ticket_metrics.parquet").exists():
         quarters = sorted({r.get("reporting_quarter") for r in _read_parquet(interim / "ticket_metrics.parquet") if r.get("reporting_quarter")})
@@ -103,11 +120,13 @@ def load_dashboard_data(project_root: str | Path, interim_dir: str | Path | None
     for row in agents:
         status = row.get("priority_status", "unknown")
         priority_counts[status] = priority_counts.get(status, 0) + 1
+    review_lists = build_review_lists(agents)
     return {"agents": agents, "overall": overall, "exposure": exposure,
             "latest_quarter": stage4.get("latest_complete_quarter") or (quarters[-1] if quarters else "Unavailable"),
             "available_period": (quarters[0], quarters[-1]) if quarters else ("Unavailable", "Unavailable"),
             "priority_counts": priority_counts, "stage7": stage7, "ai_report": ai_report,
-            "ai_by_agent": ai_by_id, "interim": interim}
+            "ai_by_agent": ai_by_id, "stage6": stage6, "review_lists": review_lists,
+            "root_cause": root_cause, "interim": interim}
 
 
 EXPORT_COLUMNS = {

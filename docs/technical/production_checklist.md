@@ -22,7 +22,7 @@ This checklist distinguishes local release evidence from target-host acceptance.
 - [ ] Authentication/access boundary, TLS, network restriction, and secrets handling verified on the actual host.
 - [ ] Central monitoring, log collection, and paging/alert delivery configured and tested.
 - [ ] Target-host rollback/restore drill and release-owner approval recorded.
-- [ ] Original client submission form obtained; the repository file is only an internal status note.
+- [x] `docs/submission/submission-form.md` contains completed responses to the actual Task 1 questions; a separate blank client form template was not found.
 
 ## Limitations that remain
 
